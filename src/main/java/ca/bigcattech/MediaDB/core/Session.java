@@ -1,3 +1,22 @@
+/*
+ *     Session
+ *     Last Modified: 2021-06-18, 7:28 p.m.
+ *     Copyright (C) 2021-06-18, 7:28 p.m.  CameronBarnes
+ *
+ *     This program is free software: you can redistribute it and/or modify
+ *     it under the terms of the GNU General Public License as published by
+ *     the Free Software Foundation, either version 3 of the License, or
+ *     (at your option) any later version.
+ *
+ *     This program is distributed in the hope that it will be useful,
+ *     but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *     GNU General Public License for more details.
+ *
+ *     You should have received a copy of the GNU General Public License
+ *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package ca.bigcattech.MediaDB.core;
 
 import ca.bigcattech.MediaDB.IO.FileSystemHandler;
@@ -86,6 +105,7 @@ public class Session {
 	}
 	
 	public Options getOptions() {
+		
 		return mOptions;
 	}
 	
@@ -114,6 +134,7 @@ public class Session {
 	}
 	
 	public void search(String string) {
+		
 		String[] tmp = string.toLowerCase(Locale.ROOT).split("(\\s*\\|.*\\|\\s*)");
 		if (tmp.length == 1)
 			search(mAllowRestricted, tmp[0].split(" "), new String[]{});
@@ -123,14 +144,17 @@ public class Session {
 	
 	@Deprecated
 	public void search(String[] tags) {
+		
 		search(mAllowRestricted, tags, new String[]{});
 	}
 	
 	public void search(String[] tags, String[] bannedTags) {
+		
 		search(mAllowRestricted, tags, bannedTags);
 	}
 	
 	public void search(boolean allowRestricted, String[] tags) {
+		
 		search(allowRestricted, tags, new String[]{});
 	}
 	
@@ -183,6 +207,7 @@ public class Session {
 	}
 	
 	private boolean checkContentWithBlacklist(Content content) {
+		
 		return !Utils.stringArrContainsStrFromArray(content.getTags(), mSearchTagsBlacklist);
 	}
 	
@@ -250,6 +275,7 @@ public class Session {
 	}
 	
 	public void setKeyListener(IKeyListener listener) {
+		
 		mKeyListener = listener;
 	}
 	
@@ -322,6 +348,7 @@ public class Session {
 	}
 	
 	public void ingestCancel() {
+		
 		mIngest.stop();
 	}
 	
@@ -342,32 +369,39 @@ public class Session {
 	}
 	
 	public int getIngestTempNum() {
+		
 		return mIngestTempNum;
 	}
 	
 	public int getScrollBarTempNum() {
+		
 		return mScrollBarTempNum;
 	}
 	
 	public void setScrollBarTempNum(int num) {
+		
 		mScrollBarTempNum = num;
 	}
 	
 	public int getNumResultPages() {
+		
 		return mNumResultPages;
 	}
 	
 	public int getResultPage() {
+		
 		return mResultPage;
 	}
 	
 	public void setResultPage(int page) {
+		
 		if (page < 0) mResultPage = 0;
 		else if (page > mNumResultPages - 1) mResultPage = mNumResultPages - 1;
 		else mResultPage = page;
 	}
 	
 	public Ingest getIngest() {
+		
 		return mIngest;
 	}
 	
@@ -396,23 +430,27 @@ public class Session {
 	}
 	
 	public void revalidateAndRepaintFrame() {
+		
 		mMainFrame.revalidate();
 		mMainFrame.repaint();
 	}
 	
 	public ArrayList<String> getDictionary() {
+		
 		synchronized (mDictionary) {
 			return new ArrayList<>(mDictionary);
 		}
 	}
 	
 	private void sortDictionary() {
+		
 		synchronized (mDictionary) {
 			new Thread(() -> mDictionary.sort(new TagNameComparator(mDBHandler))).start();
 		}
 	}
 	
 	public void addTagToDictionary(String tag) {
+		
 		addTagToDictionary(new String[]{tag});
 	}
 	
@@ -436,41 +474,50 @@ public class Session {
 	}
 	
 	public void setVolume(int volume) {
+		
 		if (volume > 100) mVolume = 100;
 		else mVolume = Math.max(volume, 0);
 	}
 	
 	public int getVolume() {
+		
 		return mVolume;
 	}
 	
 	public void removeTagFromDictionary(String tag) {
+		
 		synchronized (mDictionary) {
 			mDictionary.remove(tag);
 		}
 	}
 	
 	public String[] getSearchTags() {
+		
 		return mSearchTags;
 	}
 	
 	public String[] getSearchTagsBlacklist() {
+		
 		return mSearchTagsBlacklist;
 	}
 	
 	public SessionState getSessionState() {
+		
 		return mSessionState;
 	}
 	
 	public Content[] getResults() {
+		
 		return mResults;
 	}
 	
 	public Content getContent() {
+		
 		return mContent;
 	}
 	
 	public DBHandler getDBHandler() {
+		
 		return mDBHandler;
 	}
 	

@@ -1,3 +1,22 @@
+/*
+ *     MainFrame
+ *     Last Modified: 2021-06-18, 7:28 p.m.
+ *     Copyright (C) 2021-06-18, 7:28 p.m.  CameronBarnes
+ *
+ *     This program is free software: you can redistribute it and/or modify
+ *     it under the terms of the GNU General Public License as published by
+ *     the Free Software Foundation, either version 3 of the License, or
+ *     (at your option) any later version.
+ *
+ *     This program is distributed in the hope that it will be useful,
+ *     but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *     GNU General Public License for more details.
+ *
+ *     You should have received a copy of the GNU General Public License
+ *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package ca.bigcattech.MediaDB.gui.frames;
 
 import ca.bigcattech.MediaDB.IO.FileSystemHandler;
@@ -68,6 +87,7 @@ public class MainFrame extends JFrame {
 		purge.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent e) {
+				
 				super.mouseClicked(e);
 				if (mSession.getSessionState() == Session.SessionState.INGEST) return;
 				JOptionPane.showMessageDialog(MainFrame.this, "Removing duplicate's in the Ingest folder. This will take a while.\nPress OK to continue.");
@@ -79,6 +99,7 @@ public class MainFrame extends JFrame {
 		purgeDuplicateFolder.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent e) {
+				
 				super.mouseClicked(e);
 				if (mSession.getSessionState() == Session.SessionState.INGEST) return;
 				File folder = FileSystemHandler.getDirectoryWithFileChooser();
@@ -110,6 +131,7 @@ public class MainFrame extends JFrame {
 		helpButton.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent e) {
+				
 				super.mouseClicked(e);
 				if (mHelpFrame != null) {
 					mHelpFrame.dispose();
@@ -131,6 +153,7 @@ public class MainFrame extends JFrame {
 		this.addWindowListener(new WindowAdapter() {
 			@Override
 			public void windowClosing(WindowEvent e) {
+				
 				super.windowClosing(e);
 				FileSystemHandler.writeOptions(mSession.getOptions());
 				System.exit(0);
@@ -157,6 +180,7 @@ public class MainFrame extends JFrame {
 	}
 	
 	public void setSession(Session session) {
+		
 		mSession = session;
 		mColumnSpinner.setValue(session.getOptions().getColumns());
 	}

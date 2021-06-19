@@ -1,3 +1,22 @@
+/*
+ *     IngestForm
+ *     Last Modified: 2021-06-18, 7:28 p.m.
+ *     Copyright (C) 2021-06-18, 7:28 p.m.  CameronBarnes
+ *
+ *     This program is free software: you can redistribute it and/or modify
+ *     it under the terms of the GNU General Public License as published by
+ *     the Free Software Foundation, either version 3 of the License, or
+ *     (at your option) any later version.
+ *
+ *     This program is distributed in the hope that it will be useful,
+ *     but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *     GNU General Public License for more details.
+ *
+ *     You should have received a copy of the GNU General Public License
+ *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package ca.bigcattech.MediaDB.gui.forms;
 
 import ca.bigcattech.MediaDB.IO.FileSystemHandler;
@@ -124,6 +143,7 @@ public class IngestForm implements IKeyListener {
 			progress.addMouseListener(new MouseAdapter() {
 				@Override
 				public void mouseClicked(MouseEvent e) {
+					
 					super.mouseClicked(e);
 					Rectangle r = progress.getBounds();
 					float pos = e.getX() / ((float) r.width);
@@ -141,6 +161,7 @@ public class IngestForm implements IKeyListener {
 			mMediaPlayerComponent.mediaPlayer().events().addMediaPlayerEventListener(new MediaPlayerEventAdapter() {
 				@Override
 				public void positionChanged(MediaPlayer mediaPlayer, float newPosition) {
+					
 					if (!manualChangeBar[0]) progress.setValue(Math.min(maxPos, Math.round(newPosition * (float) maxPos)));
 					else manualChangeBar[0] = false;
 					if (length.getText().equals("00:00")) length.setText(Utils.longToStrTime(mediaPlayer.status().length()));
@@ -193,6 +214,7 @@ public class IngestForm implements IKeyListener {
 		mTitle.addKeyListener(new KeyAdapter() {
 			@Override
 			public void keyTyped(KeyEvent e) {
+				
 				super.keyTyped(e);
 				mIngestTask.setTitle(mTitle.getText());
 			}
@@ -201,6 +223,7 @@ public class IngestForm implements IKeyListener {
 		mDescription.addKeyListener(new KeyAdapter() {
 			@Override
 			public void keyTyped(KeyEvent e) {
+				
 				super.keyTyped(e);
 				mIngestTask.setDescription(mDescription.getText());
 			}
@@ -415,6 +438,7 @@ public class IngestForm implements IKeyListener {
 	
 	@Override
 	public void keyReleased(KeyEvent e, boolean control) {
+		
 		if (control && e.getKeyCode() == KeyEvent.VK_TAB) SwingUtilities.invokeLater(() -> mTagsField.requestFocusInWindow());
 		else if (control && e.getKeyCode() == KeyEvent.VK_ENTER) mButtonDone.doClick();
 		else if (control && e.getKeyCode() == KeyEvent.VK_BACK_SLASH) mSkip.doClick();

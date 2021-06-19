@@ -1,3 +1,22 @@
+/*
+ *     FileSystemHandler
+ *     Last Modified: 2021-06-18, 7:28 p.m.
+ *     Copyright (C) 2021-06-18, 7:28 p.m.  CameronBarnes
+ *
+ *     This program is free software: you can redistribute it and/or modify
+ *     it under the terms of the GNU General Public License as published by
+ *     the Free Software Foundation, either version 3 of the License, or
+ *     (at your option) any later version.
+ *
+ *     This program is distributed in the hope that it will be useful,
+ *     but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *     GNU General Public License for more details.
+ *
+ *     You should have received a copy of the GNU General Public License
+ *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package ca.bigcattech.MediaDB.IO;
 
 import ca.bigcattech.MediaDB.core.Options;
@@ -71,7 +90,7 @@ public class FileSystemHandler {
 		}
 		
 		return new Options();
-	
+		
 	}
 	
 	private static Document validateDocument(Document document) {
@@ -97,7 +116,7 @@ public class FileSystemHandler {
 		options.getSearchOptions().setReverseOrder(document.getBoolean(KEY_SEARCH_OPTIONS_REVERSE_ORDER));
 		options.getSearchOptions().setSearchType(Options.SearchOptions.SearchType.valueOf(document.getString(KEY_SEARCH_OPTIONS_SEARCH_ORDER)));
 		return options;
-	
+		
 	}
 	
 	public static void writeOptions(Options options) {
@@ -140,6 +159,7 @@ public class FileSystemHandler {
 	//================================Bellow here are some util functions====================================
 	
 	public static int getNumberContentInIngestFolder() {
+		
 		return listNumNotFolderRecursive(INGEST_DIR);
 	}
 	
@@ -244,10 +264,12 @@ public class FileSystemHandler {
 	}
 	
 	public static String getHashOfSourceImage(String fileName) {
+		
 		return Utils.getFirstSubstring(fileName, "[\\._]");
 	}
 	
 	public static String getHashOfSourceImage(File file) {
+		
 		return Utils.getFirstSubstring(file.getName(), "[\\._]");
 	}
 	
@@ -267,10 +289,12 @@ public class FileSystemHandler {
 	}
 	
 	public static String getExtension(File file) {
+		
 		return Utils.getLastSubstring(file.toString(), ".");
 	}
 	
 	public static File subdirectory(File root, File subdirectory) {
+		
 		return new File(root.toString() + '\\' + subdirectory.toString());
 	}
 	
@@ -298,7 +322,7 @@ public class FileSystemHandler {
 	}
 	
 	public static File getDirectoryWithFileChooser() {
-	
+		
 		JFileChooser chooser = new JFileChooser(INGEST_DIR);
 		//chooser.setFileFilter(new FolderFilter());
 		chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
@@ -309,7 +333,7 @@ public class FileSystemHandler {
 			return chooser.getSelectedFile();
 		}
 		else return INGEST_DIR;
-	
+		
 	}
 	
 }

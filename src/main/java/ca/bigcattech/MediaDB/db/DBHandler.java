@@ -1,3 +1,22 @@
+/*
+ *     DBHandler
+ *     Last Modified: 2021-06-18, 7:28 p.m.
+ *     Copyright (C) 2021-06-18, 7:28 p.m.  CameronBarnes
+ *
+ *     This program is free software: you can redistribute it and/or modify
+ *     it under the terms of the GNU General Public License as published by
+ *     the Free Software Foundation, either version 3 of the License, or
+ *     (at your option) any later version.
+ *
+ *     This program is distributed in the hope that it will be useful,
+ *     but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *     GNU General Public License for more details.
+ *
+ *     You should have received a copy of the GNU General Public License
+ *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package ca.bigcattech.MediaDB.db;
 
 import ca.bigcattech.MediaDB.db.content.Content;
@@ -310,6 +329,7 @@ public class DBHandler {
 	}
 	
 	public long getNumContent() {
+		
 		MongoCollection<Document> collection = mDatabase.getCollection(COLLECTION_CONTENT);
 		return collection.countDocuments();
 	}
@@ -360,6 +380,7 @@ public class DBHandler {
 	}
 	
 	public long countContentWithTag(String tag) {
+		
 		return countContentWithTag(new String[]{tag});
 	}
 	
@@ -389,6 +410,7 @@ public class DBHandler {
 	}
 	
 	public boolean addTagToContent(String hash, String tag) {
+		
 		return addTagToContent(hash, new String[]{tag});
 	}
 	
@@ -419,6 +441,7 @@ public class DBHandler {
 	//++++++++++++++++++++++++++++++++++Update content tags based on tag parents++++++++++++++++++++++++++++++++++++
 	
 	public boolean removeTagFromContent(String hash, String tag) {
+		
 		return removeTagFromContent(hash, new String[]{tag});
 	}
 	
@@ -501,12 +524,14 @@ public class DBHandler {
 	//++++++++++++++++++++++++++++Check restricted status on tags from content+++++++++++++++++++++++++++++++++++
 	
 	public void removeTagFromAllContent(String tag) {
+		
 		removeTagFromAllContent(new String[]{tag});
 	}
 	
 	//+++++++++++++++++++++++++++++++++++++++Manage tag database+++++++++++++++++++++++++++++++++++++++++++++++++
 	
 	public long getNumTags() {
+		
 		MongoCollection<Document> collection = mDatabase.getCollection(COLLECTION_TAGS);
 		return collection.countDocuments();
 	}
@@ -592,6 +617,7 @@ public class DBHandler {
 	}
 	
 	public void addTag(String tag) {
+		
 		addTag(new String[]{tag});
 	}
 	

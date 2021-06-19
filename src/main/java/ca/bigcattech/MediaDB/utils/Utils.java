@@ -1,3 +1,22 @@
+/*
+ *     Utils
+ *     Last Modified: 2021-06-18, 7:28 p.m.
+ *     Copyright (C) 2021-06-18, 7:28 p.m.  CameronBarnes
+ *
+ *     This program is free software: you can redistribute it and/or modify
+ *     it under the terms of the GNU General Public License as published by
+ *     the Free Software Foundation, either version 3 of the License, or
+ *     (at your option) any later version.
+ *
+ *     This program is distributed in the hope that it will be useful,
+ *     but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *     GNU General Public License for more details.
+ *
+ *     You should have received a copy of the GNU General Public License
+ *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package ca.bigcattech.MediaDB.utils;
 
 import javax.swing.*;
@@ -46,15 +65,18 @@ public final class Utils {
 	}
 	
 	public static String getFirstSubstring(String text, String split) {
+		
 		return text.split(split)[0];
 	}
 	
 	public static String getLastSubstring(String text, String split) {
+		
 		int num = text.lastIndexOf(split);
 		return num == -1 ? text : text.substring(++num);
 	}
 	
 	public static Character getLastChar(String string) {
+		
 		if (string.isEmpty()) return null;
 		return string.charAt(string.length() - 1);
 	}
@@ -86,6 +108,7 @@ public final class Utils {
 	}
 	
 	public static String getFileChecksum(MessageDigest digest, File file) throws IOException {
+		
 		if (file.isDirectory()) return null;
 		//Get file input stream for reading the file content
 		try (FileInputStream fis = new FileInputStream(file)) {
@@ -125,6 +148,7 @@ public final class Utils {
 	}
 	
 	public static <T> void addArrayToComboBox(JComboBox<T> comboBox, List<T> array) {
+		
 		for (T thing: array) comboBox.addItem(thing);
 	}
 	

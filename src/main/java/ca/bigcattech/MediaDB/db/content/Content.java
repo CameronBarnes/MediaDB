@@ -1,3 +1,22 @@
+/*
+ *     Content
+ *     Last Modified: 2021-06-18, 7:28 p.m.
+ *     Copyright (C) 2021-06-18, 7:28 p.m.  CameronBarnes
+ *
+ *     This program is free software: you can redistribute it and/or modify
+ *     it under the terms of the GNU General Public License as published by
+ *     the Free Software Foundation, either version 3 of the License, or
+ *     (at your option) any later version.
+ *
+ *     This program is distributed in the hope that it will be useful,
+ *     but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *     GNU General Public License for more details.
+ *
+ *     You should have received a copy of the GNU General Public License
+ *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package ca.bigcattech.MediaDB.db.content;
 
 import ca.bigcattech.MediaDB.IO.FileSystemHandler;
@@ -35,79 +54,98 @@ public class Content {
 	private boolean mFavorite = false;
 	
 	Content(ContentType type) {
+		
 		mType = type;
 	}
 	
 	public static ContentBuilder builder(ContentType type) {
+		
 		return new ContentBuilder(type);
 	}
 	
 	public File getFile() {
+		
 		return mFile;
 	}
 	
 	public void setFile(File file) {
+		
 		mFile = file;
 	}
 	
 	public String getHash() {
+		
 		return mHash;
 	}
 	
 	public void setHash(String hash) {
+		
 		mHash = hash;
 	}
 	
 	public ContentType getType() {
+		
 		return mType;
 	}
 	
 	public SimilarityFinder.ImageSignature getSignature() {
+		
 		return mSignature;
 	}
 	
 	public void setSignature(SimilarityFinder.ImageSignature signature) {
+		
 		mSignature = signature;
 	}
 	
 	public boolean isRestricted() {
+		
 		return mIsRestricted;
 	}
 	
 	void setRestricted(boolean restricted) {
+		
 		mIsRestricted = restricted;
 	}
 	
 	public boolean isPrivate() {
+		
 		return mIsPrivate;
 	}
 	
 	public void setPrivate(boolean isPrivate) {
+		
 		mIsPrivate = isPrivate;
 		if (mIsPrivate) mIsRestricted = true;
 	}
 	
 	public boolean isFavorite() {
+		
 		return mFavorite;
 	}
 	
 	public void setFavorite(boolean favorite) {
+		
 		mFavorite = favorite;
 	}
 	
 	public String getTitle() {
+		
 		return mTitle;
 	}
 	
 	public void setTitle(String title) {
+		
 		mTitle = title;
 	}
 	
 	public String[] getTags() {
+		
 		return mTags;
 	}
 	
 	public void setTags(String[] tags) {
+		
 		mTags = tags;
 	}
 	
@@ -123,6 +161,7 @@ public class Content {
 	}
 	
 	public void removeTag(String tag) {
+		
 		removeTag(new String[]{tag});
 	}
 	
@@ -138,42 +177,52 @@ public class Content {
 	}
 	
 	public String getDescription() {
+		
 		return mDescription;
 	}
 	
 	public void setDescription(String description) {
+		
 		mDescription = description;
 	}
 	
 	public int getViews() {
+		
 		return mViews;
 	}
 	
 	void setViews(int views) {
+		
 		mViews = views;
 	}
 	
 	public int incrementViews() {
+		
 		return ++mViews;
 	}
 	
 	public long getVideoLength() {
+		
 		return mVideoLength;
 	}
 	
 	public void setVideoLength(long videoLength) {
+		
 		mVideoLength = videoLength;
 	}
 	
 	public long getTimeSpent() {
+		
 		return mTimeSpent;
 	}
 	
 	public void setTimeSpent(long timeSpent) {
+		
 		mTimeSpent = timeSpent;
 	}
 	
 	public void incrementTimeSpent(long timeSpent) {
+		
 		mTimeSpent += timeSpent;
 	}
 	
@@ -285,9 +334,12 @@ public class Content {
 	}
 	
 	public static class ContentValidationException extends Exception {
+		
 		public ContentValidationException(FormattingError error) {
+			
 			super(error.name());
 		}
+		
 	}
 	
 }

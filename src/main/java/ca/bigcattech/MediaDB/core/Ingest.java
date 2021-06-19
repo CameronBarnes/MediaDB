@@ -1,3 +1,22 @@
+/*
+ *     Ingest
+ *     Last Modified: 2021-06-18, 7:28 p.m.
+ *     Copyright (C) 2021-06-18, 7:28 p.m.  CameronBarnes
+ *
+ *     This program is free software: you can redistribute it and/or modify
+ *     it under the terms of the GNU General Public License as published by
+ *     the Free Software Foundation, either version 3 of the License, or
+ *     (at your option) any later version.
+ *
+ *     This program is distributed in the hope that it will be useful,
+ *     but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *     GNU General Public License for more details.
+ *
+ *     You should have received a copy of the GNU General Public License
+ *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package ca.bigcattech.MediaDB.core;
 
 import ca.bigcattech.MediaDB.IO.FileSystemHandler;
@@ -127,6 +146,7 @@ public class Ingest {
 	}
 	
 	public synchronized void purgeDuplicates() {
+		
 		purgeDuplicates(FileSystemHandler.INGEST_DIR);
 	}
 	
@@ -152,10 +172,12 @@ public class Ingest {
 	}
 	
 	public int getNumIngestTasks() {
+		
 		return mIngestTasks.size();
 	}
 	
 	public synchronized void ingestContent() {
+		
 		ingestContent(FileSystemHandler.INGEST_DIR);
 	}
 	
@@ -221,6 +243,7 @@ public class Ingest {
 		private boolean mSkip = false;
 		
 		private IngestTask(File file) {
+			
 			mFile = file;
 			mStartDir = mFile.getParentFile();
 			if (!mStartDir.isDirectory()) throw new RuntimeException("Invalid File: " + file.getName());
@@ -372,26 +395,32 @@ public class Ingest {
 		}
 		
 		public void setSkip() {
+			
 			mSkip = true;
 		}
 		
 		public void setCancel() {
+			
 			mCancel = true;
 		}
 		
 		public boolean isActive() {
+			
 			return mIsActive;
 		}
 		
 		public void setResult(IngestResult result) {
+			
 			mResult = result;
 		}
 		
 		public long getVideoLength() {
+			
 			return mVideoLength;
 		}
 		
 		public void setVideoLength(long length) {
+			
 			mVideoLength = length;
 		}
 		
@@ -508,6 +537,7 @@ public class Ingest {
 		}
 		
 		public void removeTags(String tag) {
+			
 			removeTags(new String[]{tag});
 		}
 		
@@ -523,22 +553,27 @@ public class Ingest {
 		}
 		
 		public void setDescription(String description) {
+			
 			mDescription = description;
 		}
 		
 		public void setPrivate(boolean isPrivate) {
+			
 			this.isPrivate = isPrivate;
 		}
 		
 		public void setTitle(String title) {
+			
 			mTitle = title;
 		}
 		
 		public File getFile() {
+			
 			return mFile;
 		}
 		
 		public ContentType getType() {
+			
 			return mType;
 		}
 		
