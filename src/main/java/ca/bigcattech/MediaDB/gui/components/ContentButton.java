@@ -1,7 +1,7 @@
 /*
  *     ContentButton
- *     Last Modified: 2021-06-18, 7:24 p.m.
- *     Copyright (C) 2021-06-18, 7:28 p.m.  CameronBarnes
+ *     Last Modified: 2021-06-19, 9:59 p.m.
+ *     Copyright (C) 2021-06-19, 9:59 p.m.  CameronBarnes
  *
  *     This program is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
@@ -33,8 +33,6 @@ public class ContentButton extends JButton {
 	private final Content mContent;
 	
 	public ContentButton(Content content) {
-		
-		super(new ImageIcon(content.getThumbnailFile()));
 		
 		mContent = content;
 		
@@ -72,6 +70,11 @@ public class ContentButton extends JButton {
 		this.setVerticalTextPosition(SwingConstants.BOTTOM);
 		this.setPreferredSize(new Dimension(300, 320));
 		
+	}
+	
+	public void displayThumbnail() {
+		
+		this.setIcon(new ImageIcon(mContent.getThumbnailFile()));
 	}
 	
 	public Content getContent() {

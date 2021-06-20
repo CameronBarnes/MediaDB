@@ -1,7 +1,7 @@
 /*
  *     DBHandler
- *     Last Modified: 2021-06-18, 7:28 p.m.
- *     Copyright (C) 2021-06-18, 7:28 p.m.  CameronBarnes
+ *     Last Modified: 2021-06-19, 9:59 p.m.
+ *     Copyright (C) 2021-06-19, 9:59 p.m.  CameronBarnes
  *
  *     This program is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
@@ -355,7 +355,9 @@ public class DBHandler {
 		else collection.find(Filters.all(KEY_CONTENT_TAGS, new ArrayList<>(Arrays.asList(tags)))).into(documents);
 		ConcurrentLinkedQueue<Content> content = new ConcurrentLinkedQueue<>();
 		
+		long start = System.currentTimeMillis();
 		documents.stream().parallel().forEach(document -> content.add(loadContentFromDocument(document)));
+		log.info("Loading content from documents took: " + (System.currentTimeMillis() - start) + "ms");
 		
 		if (!restricted) {
 			List<Content> out = content.stream().parallel().collect(Collectors.toList());

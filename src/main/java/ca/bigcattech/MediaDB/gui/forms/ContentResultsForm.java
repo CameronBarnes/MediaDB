@@ -1,7 +1,7 @@
 /*
  *     ContentResultsForm
- *     Last Modified: 2021-06-18, 7:28 p.m.
- *     Copyright (C) 2021-06-18, 7:28 p.m.  CameronBarnes
+ *     Last Modified: 2021-06-19, 9:59 p.m.
+ *     Copyright (C) 2021-06-19, 9:59 p.m.  CameronBarnes
  *
  *     This program is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
@@ -201,15 +201,21 @@ public class ContentResultsForm implements IKeyListener {
 			}
 		}
 		
+		long start = System.currentTimeMillis();
 		Arrays.stream(contentArr).parallel().forEach(content -> buttons.add(createButton(content)));
 		ContentButton[] lastStep = buttons.toArray(new ContentButton[0]);
+		log.info("Creating button objects took: " + (System.currentTimeMillis() - start) + "ms");
 		
-		long start = System.currentTimeMillis();
+		start = System.currentTimeMillis();
 		ContentComparator comparator = new ContentComparator(mSession.getOptions().getSearchOptions());
 		Arrays.sort(lastStep, (a, b) -> comparator.compare(a.getContent(), b.getContent()));
 		log.info((System.currentTimeMillis() - start) + "ms to sort content buttons");
 		
+		start = System.currentTimeMillis();
 		Arrays.stream(lastStep).forEach(contentButton -> mContentResultPannel.add(contentButton));
+		log.info((System.currentTimeMillis() - start) + "ms to add content buttons to the results panel");
+		
+		new Thread(() -> buttons.stream().parallel().forEach(ContentButton::displayThumbnail)).start();
 		
 	}
 	
