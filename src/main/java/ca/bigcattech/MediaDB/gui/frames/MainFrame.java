@@ -1,7 +1,7 @@
 /*
  *     MainFrame
- *     Last Modified: 2021-06-18, 7:28 p.m.
- *     Copyright (C) 2021-06-18, 7:28 p.m.  CameronBarnes
+ *     Last Modified: 2021-07-03, 2:22 a.m.
+ *     Copyright (C) 2021-07-03, 2:22 a.m.  CameronBarnes
  *
  *     This program is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
@@ -106,18 +106,52 @@ public class MainFrame extends JFrame {
 				JOptionPane.showMessageDialog(MainFrame.this, "Removing duplicate's in the '" + folder.getName() + "' folder. This will take a while.\nPress OK to continue.");
 				mSession.getIngest().purgeDuplicates(folder);
 				if (mSession.getSessionState() == Session.SessionState.HOME) mSession.home();
+				
+			}
+		});
+		
+		JLabel validateContentFolder = new JLabel("Validate Content Folder");
+		validateContentFolder.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				
+				super.mouseClicked(e);
+				mSession.getIngest().validateContentFolder();
 			}
 		});
 		
 		JCheckBoxMenuItem ingestTagFieldAuto = new JCheckBoxMenuItem("Auto Ingest Tag Field");
+		ingestTagFieldAuto.setSelected(options.isIngestAutoTagField());
 		ingestTagFieldAuto.addActionListener(e -> mSession.getOptions().setIngestAutoTagField(ingestTagFieldAuto.isSelected()));
 		
 		ingestOptions.add(ingestTagFieldAuto);
 		ingestOptions.add(purge);
 		ingestOptions.add(purgeDuplicateFolder);
+		ingestOptions.add(validateContentFolder);
+		
+		JMenu contentView = new JMenu("Content View Options:");
+		contentView.add("Slideshow timer (sec):");
+		JSpinner slideshowTimerSpinner = new JSpinner(new SpinnerNumberModel(options.getSlideshowTimer(), 1, Integer.MAX_VALUE, 1));
+		slideshowTimerSpinner.addChangeListener(e -> {
+			mSession.getOptions().setSlideshowTimer((Integer) mColumnSpinner.getValue());
+			mSession.updateSlideShowTimer();
+		});
+		JLabel startSlideshow = new JLabel("Start Slideshow");
+		startSlideshow.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				
+				super.mouseClicked(e);
+				mSession.startSlideShow();
+			}
+		});
+		
+		contentView.add(slideshowTimerSpinner);
+		contentView.add(startSlideshow);
 		
 		jMenu.add(searchOptions);
 		jMenu.add(ingestOptions);
+		jMenu.add(contentView);
 		jMenu.add(new JLabel("Result Columns"));
 		jMenu.add(mColumnSpinner);
 		
@@ -153,7 +187,6 @@ public class MainFrame extends JFrame {
 		this.addWindowListener(new WindowAdapter() {
 			@Override
 			public void windowClosing(WindowEvent e) {
-				
 				super.windowClosing(e);
 				FileSystemHandler.writeOptions(mSession.getOptions());
 				System.exit(0);

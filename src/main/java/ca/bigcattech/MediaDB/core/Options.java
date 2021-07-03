@@ -1,7 +1,7 @@
 /*
  *     Options
- *     Last Modified: 2021-06-18, 7:28 p.m.
- *     Copyright (C) 2021-06-18, 7:28 p.m.  CameronBarnes
+ *     Last Modified: 2021-07-03, 2:22 a.m.
+ *     Copyright (C) 2021-07-03, 2:22 a.m.  CameronBarnes
  *
  *     This program is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
@@ -24,11 +24,24 @@ public class Options {
 	private final SearchOptions mSearchOptions;
 	private int mColumns = 5;
 	private int mResultsPerPage = 250;
+	private int mSlideshowTimer = 5;
 	private boolean mIngestAutoTagField = false;
 	
 	public Options() {
 		
 		mSearchOptions = new SearchOptions();
+	}
+	
+	public int getSlideshowTimer() {
+		
+		System.out.println("Slideshow timer is: " + mSlideshowTimer);
+		return mSlideshowTimer;
+	}
+	
+	public void setSlideshowTimer(int slideshowTimer) {
+		
+		System.out.println("Slideshow timer is: " + mSlideshowTimer);
+		mSlideshowTimer = slideshowTimer;
 	}
 	
 	public int getResultsPerPage() {
@@ -42,27 +55,22 @@ public class Options {
 	}
 	
 	public int getColumns() {
-		
 		return mColumns;
 	}
 	
 	public void setColumns(int columns) {
-		
 		mColumns = columns;
 	}
 	
 	public boolean isIngestAutoTagField() {
-		
 		return mIngestAutoTagField;
 	}
 	
 	public void setIngestAutoTagField(boolean ingestAutoTagField) {
-		
 		mIngestAutoTagField = ingestAutoTagField;
 	}
 	
 	public SearchOptions getSearchOptions() {
-		
 		return mSearchOptions;
 	}
 	

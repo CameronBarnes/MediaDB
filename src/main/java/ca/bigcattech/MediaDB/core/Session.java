@@ -1,7 +1,7 @@
 /*
  *     Session
- *     Last Modified: 2021-06-18, 7:28 p.m.
- *     Copyright (C) 2021-06-18, 7:28 p.m.  CameronBarnes
+ *     Last Modified: 2021-07-03, 2:22 a.m.
+ *     Copyright (C) 2021-07-03, 2:22 a.m.  CameronBarnes
  *
  *     This program is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
@@ -24,6 +24,8 @@ import ca.bigcattech.MediaDB.db.DBHandler;
 import ca.bigcattech.MediaDB.db.TagNameComparator;
 import ca.bigcattech.MediaDB.db.content.Content;
 import ca.bigcattech.MediaDB.db.content.ContentComparator;
+import ca.bigcattech.MediaDB.db.content.ContentType;
+import ca.bigcattech.MediaDB.gui.forms.DisplayContentForm;
 import ca.bigcattech.MediaDB.gui.frames.MainFrame;
 import ca.bigcattech.MediaDB.gui.interfaces.IKeyListener;
 import ca.bigcattech.MediaDB.utils.Utils;
@@ -62,7 +64,11 @@ public class Session {
 	private int mVolume = 100;
 	
 	private IKeyListener mKeyListener = null;
-	private volatile boolean mControl = false;
+	private boolean mControl = false;
+	
+	private DisplayContentForm mTempContentForm = null;
+	private final Timer mSlideshowTimer;
+	private boolean mIsSlideshow = false;
 	
 	public Session(MainFrame frame, DBHandler dbHandler, Ingest ingest, Options options) {
 		
@@ -98,10 +104,50 @@ public class Session {
 			return false;
 		});
 		
+		mSlideshowTimer = new Timer(options.getSlideshowTimer() * 1000, e -> {
+			if (mTempContentForm != null && mContent.getType() != ContentType.VIDEO) {
+				boolean cont = mTempContentForm.next(true);
+				if (!cont) stopSlideShow();
+			}
+		});
+		mSlideshowTimer.setRepeats(true);
+		
 		mSessionState = SessionState.HOME;
 		
 		log.info("Done!");
 		
+	}
+	
+	public void startSlideShow() {
+		
+		if (mSessionState == SessionState.CONTENT_DISPLAY && mSlideshowTimer != null) {
+			mIsSlideshow = true;
+			mSlideshowTimer.start();
+		}
+	}
+	
+	public void stopSlideShow() {
+		
+		mIsSlideshow = false;
+		if (mSlideshowTimer != null) {
+			mSlideshowTimer.stop();
+		}
+	}
+	
+	public void resetSlideShowTimer() {
+		
+		stopSlideShow();
+		startSlideShow();
+	}
+	
+	public void updateSlideShowTimer() {
+		
+		mSlideshowTimer.setDelay(mOptions.getSlideshowTimer() * 1000);
+	}
+	
+	public boolean isSlideshow() {
+		
+		return mIsSlideshow;
 	}
 	
 	public Options getOptions() {
@@ -121,6 +167,11 @@ public class Session {
 	
 	public void displaySession() {
 		
+		if (mSessionState != SessionState.CONTENT_DISPLAY) {
+			mTempContentForm = null;
+			if (mSlideshowTimer != null) mSlideshowTimer.stop();
+		}
+		
 		switch (mSessionState) {
 			case HOME -> home();
 			case SEARCH_RESULTS -> results();
@@ -134,7 +185,6 @@ public class Session {
 	}
 	
 	public void search(String string) {
-		
 		String[] tmp = string.toLowerCase(Locale.ROOT).split("(\\s*\\|.*\\|\\s*)");
 		if (tmp.length == 1)
 			search(mAllowRestricted, tmp[0].split(" "), new String[]{});
@@ -144,17 +194,14 @@ public class Session {
 	
 	@Deprecated
 	public void search(String[] tags) {
-		
 		search(mAllowRestricted, tags, new String[]{});
 	}
 	
 	public void search(String[] tags, String[] bannedTags) {
-		
 		search(mAllowRestricted, tags, bannedTags);
 	}
 	
 	public void search(boolean allowRestricted, String[] tags) {
-		
 		search(allowRestricted, tags, new String[]{});
 	}
 	
@@ -207,7 +254,6 @@ public class Session {
 	}
 	
 	private boolean checkContentWithBlacklist(Content content) {
-		
 		return !Utils.stringArrContainsStrFromArray(content.getTags(), mSearchTagsBlacklist);
 	}
 	
@@ -259,7 +305,8 @@ public class Session {
 		
 		mKeyListener = null;
 		
-		mKeyListener = mMainFrame.displayContent(mContent);
+		mTempContentForm = mMainFrame.displayContent(mContent);
+		mKeyListener = mTempContentForm;
 		mSessionState = SessionState.CONTENT_DISPLAY;
 		mMainFrame.setBackgroundColor(Color.GRAY);
 		
@@ -275,7 +322,6 @@ public class Session {
 	}
 	
 	public void setKeyListener(IKeyListener listener) {
-		
 		mKeyListener = listener;
 	}
 	
@@ -348,7 +394,6 @@ public class Session {
 	}
 	
 	public void ingestCancel() {
-		
 		mIngest.stop();
 	}
 	

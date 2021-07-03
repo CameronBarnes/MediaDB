@@ -1,7 +1,7 @@
 /*
  *     FileSystemHandler
- *     Last Modified: 2021-06-18, 7:28 p.m.
- *     Copyright (C) 2021-06-18, 7:28 p.m.  CameronBarnes
+ *     Last Modified: 2021-07-03, 1:56 a.m.
+ *     Copyright (C) 2021-07-03, 2:22 a.m.  CameronBarnes
  *
  *     This program is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
@@ -77,6 +77,7 @@ public class FileSystemHandler {
 	private static final String KEY_SEARCH_OPTIONS_FAVORITES = "search_options_favorites";
 	private static final String KEY_SEARCH_OPTIONS_REVERSE_ORDER = "search_options_reverse_order";
 	private static final String KEY_SEARCH_OPTIONS_SEARCH_ORDER = "search_options_search_order";
+	private static final String KEY_CONTENT_OPTIONS_SLIDESHOW_TIMER = "content_options_slideshow_timer";
 	
 	public static Options getOptions() {
 		
@@ -101,6 +102,7 @@ public class FileSystemHandler {
 		document.putIfAbsent(KEY_SEARCH_OPTIONS_FAVORITES, false);
 		document.putIfAbsent(KEY_SEARCH_OPTIONS_REVERSE_ORDER, false);
 		document.putIfAbsent(KEY_SEARCH_OPTIONS_SEARCH_ORDER, Options.SearchOptions.SearchType.HASH);
+		document.putIfAbsent(KEY_CONTENT_OPTIONS_SLIDESHOW_TIMER, 5);
 		return document;
 		
 	}
@@ -115,6 +117,7 @@ public class FileSystemHandler {
 		options.getSearchOptions().setFavoritesFirst(document.getBoolean(KEY_SEARCH_OPTIONS_FAVORITES));
 		options.getSearchOptions().setReverseOrder(document.getBoolean(KEY_SEARCH_OPTIONS_REVERSE_ORDER));
 		options.getSearchOptions().setSearchType(Options.SearchOptions.SearchType.valueOf(document.getString(KEY_SEARCH_OPTIONS_SEARCH_ORDER)));
+		options.setSlideshowTimer(document.getInteger(KEY_CONTENT_OPTIONS_SLIDESHOW_TIMER));
 		return options;
 		
 	}
@@ -152,6 +155,7 @@ public class FileSystemHandler {
 		document.put(KEY_SEARCH_OPTIONS_FAVORITES, options.getSearchOptions().isFavoritesFirst());
 		document.put(KEY_SEARCH_OPTIONS_REVERSE_ORDER, options.getSearchOptions().isReverseOrder());
 		document.put(KEY_SEARCH_OPTIONS_SEARCH_ORDER, options.getSearchOptions().getSearchType().name());
+		document.put(KEY_CONTENT_OPTIONS_SLIDESHOW_TIMER, options.getSlideshowTimer());
 		return document;
 		
 	}
@@ -159,7 +163,6 @@ public class FileSystemHandler {
 	//================================Bellow here are some util functions====================================
 	
 	public static int getNumberContentInIngestFolder() {
-		
 		return listNumNotFolderRecursive(INGEST_DIR);
 	}
 	
@@ -264,12 +267,10 @@ public class FileSystemHandler {
 	}
 	
 	public static String getHashOfSourceImage(String fileName) {
-		
 		return Utils.getFirstSubstring(fileName, "[\\._]");
 	}
 	
 	public static String getHashOfSourceImage(File file) {
-		
 		return Utils.getFirstSubstring(file.getName(), "[\\._]");
 	}
 	
@@ -324,7 +325,6 @@ public class FileSystemHandler {
 	public static File getDirectoryWithFileChooser() {
 		
 		JFileChooser chooser = new JFileChooser(INGEST_DIR);
-		//chooser.setFileFilter(new FolderFilter());
 		chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
 		
 		int returnVal = chooser.showOpenDialog(null);

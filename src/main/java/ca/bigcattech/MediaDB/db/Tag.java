@@ -1,7 +1,7 @@
 /*
  *     Tag
- *     Last Modified: 2021-06-18, 7:28 p.m.
- *     Copyright (C) 2021-06-18, 7:28 p.m.  CameronBarnes
+ *     Last Modified: 2021-06-28, 11:42 p.m.
+ *     Copyright (C) 2021-07-03, 2:22 a.m.  CameronBarnes
  *
  *     This program is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
@@ -141,7 +141,6 @@ public class Tag {
 	}
 	
 	public int compareToName(Tag tag) {
-		
 		return mName.compareToIgnoreCase(tag.getName());
 	}
 	

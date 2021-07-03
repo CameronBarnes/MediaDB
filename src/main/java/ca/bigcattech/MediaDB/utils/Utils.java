@@ -1,7 +1,7 @@
 /*
  *     Utils
- *     Last Modified: 2021-06-18, 7:28 p.m.
- *     Copyright (C) 2021-06-18, 7:28 p.m.  CameronBarnes
+ *     Last Modified: 2021-06-25, 9:56 a.m.
+ *     Copyright (C) 2021-07-03, 2:22 a.m.  CameronBarnes
  *
  *     This program is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
@@ -66,7 +66,14 @@ public final class Utils {
 	
 	public static String getFirstSubstring(String text, String split) {
 		
-		return text.split(split)[0];
+		try {
+			return text.split(split)[0];
+		}
+		catch (Exception e) {
+			System.err.printf("Input text is: %s Split regex is: %s%n", text, split);
+			throw e;
+		}
+		
 	}
 	
 	public static String getLastSubstring(String text, String split) {

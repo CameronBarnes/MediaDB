@@ -1,7 +1,7 @@
 /*
  *     TagsManagementForm
- *     Last Modified: 2021-06-18, 7:28 p.m.
- *     Copyright (C) 2021-06-18, 7:28 p.m.  CameronBarnes
+ *     Last Modified: 2021-07-03, 2:15 a.m.
+ *     Copyright (C) 2021-07-03, 2:22 a.m.  CameronBarnes
  *
  *     This program is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
@@ -629,23 +629,19 @@ public class TagsManagementForm {
 		}
 		
 		public Tag getTag() {
-			
 			return mTag;
 		}
 		
 		public String getName() {
-			
 			return mTag.getName();
 		}
 		
 		public long getNumUses() {
-			
 			return mNumUses;
 		}
 		
 		@Override
 		public String toString() {
-			
 			return mTag.getName() + ": " + mNumUses;
 		}
 		

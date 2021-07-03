@@ -1,7 +1,7 @@
 /*
  *     HelpForm
- *     Last Modified: 2021-06-18, 7:24 p.m.
- *     Copyright (C) 2021-06-18, 7:28 p.m.  CameronBarnes
+ *     Last Modified: 2021-07-03, 2:22 a.m.
+ *     Copyright (C) 2021-07-03, 2:22 a.m.  CameronBarnes
  *
  *     This program is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
@@ -135,6 +135,10 @@ public class HelpForm {
 				Keyboard Shortcuts:
 				\tWhen using the add tags field 'TAB' autocompletes.
 				\t'CONTROL' - 'ENTER' is the same as pressing the 'Done' button.
+				\t'CONTROL' - '\\' is the same as pressing the 'Skip' button.
+				\t'CONTROL' - 'TAB' selects the tag entry field.
+				\t'CONTROL' - 'SHIFT' - 'LEFT_ARROW' skips back in a video
+				\t'CONTROL' - 'SHIFT' - 'RIGHT_ARROW' skips forward in a video
 				""");
 		
 		mContentText.setText("""
@@ -151,6 +155,13 @@ public class HelpForm {
 				\tVideo content has an extra three buttons between the previous and next content buttons, from left to right they are rewind, play/pause, and skip forward.
 				\tThe 'Is Private' checkbox toggles this content as private or not, private content will not show up in searches unless you choose to allow private content.
 				\tThe 'Favorite' checkbox marks this content as a favorite, you can change search ordering to show favorite content first in the options menu.
+				
+				Keyboard Shortcuts:
+				\t'RIGHT_ARROW' is the same as pressing the '>>>>>' button.
+				\t'LEFT_ARROW' is the same as pressing the '<<<<<' button.
+				\t'CONTROL' - 'SHIFT' - 'LEFT_ARROW' skips back in a video
+				\t'CONTROL' - 'SHIFT' - 'RIGHT_ARROW' skips forward in a video
+				\t'BACKSPACE' goes back to the search results page.
 				""");
 		
 		mOptionsText.setText("""
@@ -164,8 +175,13 @@ public class HelpForm {
 				\t'Sort by' changes how the search results are ordered.
 				\tThe default is HASH, which is effectively random but wont change. TITLE is just an alphabetical sort by title. VIEWS sorts by number of views, highest first.
 				Ingest Options:
+				\t'Auto Ingest Tag Field' attempts to automatically select the tag entry box when starting a new ingest task.
 				\t'Purge Duplicates' removes any duplicate files or any files already in the database from the Ingest folder.
 				\t'Purge from folder' removes any duplicate files or any files already in the database from a folder of your choice.
+				\t'Validate Content folder' moves any files from the content folder that shouldn't be there to the ingest folder.
+				Content View Options:
+				\t'Slideshow Timer' this is the number of seconds each image is displayed for in a slideshow
+				\t'Start Slideshow' stat's a slideshow if you're currently viewing media.
 				""");
 		
 	}

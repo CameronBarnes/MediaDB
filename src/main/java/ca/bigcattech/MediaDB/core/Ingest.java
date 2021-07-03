@@ -1,7 +1,7 @@
 /*
  *     Ingest
- *     Last Modified: 2021-06-18, 7:28 p.m.
- *     Copyright (C) 2021-06-18, 7:28 p.m.  CameronBarnes
+ *     Last Modified: 2021-07-03, 2:22 a.m.
+ *     Copyright (C) 2021-07-03, 2:22 a.m.  CameronBarnes
  *
  *     This program is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
@@ -145,6 +145,27 @@ public class Ingest {
 		
 	}
 	
+	public synchronized void validateContentFolder() {
+		
+		log.info("Validate content folder");
+		Arrays.stream(Objects.requireNonNull(FileSystemHandler.CONTENT_DIR.listFiles())).parallel().forEach(file -> {
+			
+			if (file.isDirectory()) return;
+			
+			String name_hash = FileSystemHandler.getHashOfSourceImage(file);
+			if (!mDBHandler.checkHash(name_hash)) {
+				try {
+					Files.move(file.toPath(), new File(FileSystemHandler.INGEST_DIR, file.getName()).toPath());
+				}
+				catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+			
+		});
+		log.info("Validate content folder done");
+	}
+	
 	public synchronized void purgeDuplicates() {
 		
 		purgeDuplicates(FileSystemHandler.INGEST_DIR);
@@ -160,7 +181,7 @@ public class Ingest {
 			if (file.isDirectory()) return;
 			try {
 				String hash = Utils.getFileChecksum(MessageDigest.getInstance("SHA-256"), file);
-				if (mDBHandler.checkHash(hash) || hashes.contains(hash)) Files.delete(file.toPath());
+				if (hashes.contains(hash) || mDBHandler.checkHash(hash)) Files.delete(file.toPath());
 				else hashes.add(hash);
 			}
 			catch (IOException | NoSuchAlgorithmException e) {
