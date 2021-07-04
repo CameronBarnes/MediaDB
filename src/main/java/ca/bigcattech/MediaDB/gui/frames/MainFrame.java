@@ -1,7 +1,7 @@
 /*
  *     MainFrame
- *     Last Modified: 2021-07-03, 2:22 a.m.
- *     Copyright (C) 2021-07-03, 2:22 a.m.  CameronBarnes
+ *     Last Modified: 2021-07-04, 4:15 a.m.
+ *     Copyright (C) 2021-07-04, 4:17 a.m.  CameronBarnes
  *
  *     This program is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
@@ -133,14 +133,13 @@ public class MainFrame extends JFrame {
 		contentView.add("Slideshow timer (sec):");
 		JSpinner slideshowTimerSpinner = new JSpinner(new SpinnerNumberModel(options.getSlideshowTimer(), 1, Integer.MAX_VALUE, 1));
 		slideshowTimerSpinner.addChangeListener(e -> {
-			mSession.getOptions().setSlideshowTimer((Integer) mColumnSpinner.getValue());
+			mSession.getOptions().setSlideshowTimer((Integer) slideshowTimerSpinner.getValue());
 			mSession.updateSlideShowTimer();
 		});
 		JLabel startSlideshow = new JLabel("Start Slideshow");
 		startSlideshow.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent e) {
-				
 				super.mouseClicked(e);
 				mSession.startSlideShow();
 			}
