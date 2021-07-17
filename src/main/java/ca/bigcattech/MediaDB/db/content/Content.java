@@ -1,7 +1,7 @@
 /*
  *     Content
- *     Last Modified: 2021-06-18, 7:28 p.m.
- *     Copyright (C) 2021-06-18, 7:28 p.m.  CameronBarnes
+ *     Last Modified: 2021-07-16, 8:13 p.m.
+ *     Copyright (C) 2021-07-16, 9:57 p.m.  CameronBarnes
  *
  *     This program is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
@@ -302,13 +302,13 @@ public class Content {
 		
 		int out = 0;
 		
-		if (searchOptions.getSearchType() == Options.SearchOptions.SearchType.TITLE) {
+		if (searchOptions.getSearchType() == Options.SearchOptions.SortType.TITLE) {
 			out = this.getTitle().compareTo(o.getTitle());
 		}
-		else if (searchOptions.getSearchType() == Options.SearchOptions.SearchType.VIEWS) {
+		else if (searchOptions.getSearchType() == Options.SearchOptions.SortType.VIEWS) {
 			out = Integer.compare(o.getViews(), this.getViews());
 		}
-		else if (searchOptions.getSearchType() == Options.SearchOptions.SearchType.CONTENT_TYPE) {
+		else if (searchOptions.getSearchType() == Options.SearchOptions.SortType.CONTENT_TYPE) {
 			if (this.mType == ContentType.VIDEO && o.mType != ContentType.VIDEO) out = -1;
 			else if (this.mType != ContentType.VIDEO && o.mType == ContentType.VIDEO) out = 1;
 			else if (this.mType == ContentType.IMAGE && o.mType != ContentType.IMAGE) out = -1;
@@ -316,7 +316,7 @@ public class Content {
 			else if (this.mType != ContentType.GIF && o.mType == ContentType.GIF) out = 1;
 			else if (this.mType == ContentType.GIF && o.mType != ContentType.GIF) out = -1;
 		}
-		else if (searchOptions.getSearchType() == Options.SearchOptions.SearchType.VIEW_TIME) {
+		else if (searchOptions.getSearchType() == Options.SearchOptions.SortType.VIEW_TIME) {
 			out = Long.compare(o.mTimeSpent, this.mTimeSpent);
 		}
 		

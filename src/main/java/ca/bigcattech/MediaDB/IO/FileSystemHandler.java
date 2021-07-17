@@ -1,7 +1,7 @@
 /*
  *     FileSystemHandler
- *     Last Modified: 2021-07-03, 1:56 a.m.
- *     Copyright (C) 2021-07-03, 2:22 a.m.  CameronBarnes
+ *     Last Modified: 2021-07-16, 9:47 p.m.
+ *     Copyright (C) 2021-07-16, 9:57 p.m.  CameronBarnes
  *
  *     This program is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
@@ -77,6 +77,7 @@ public class FileSystemHandler {
 	private static final String KEY_SEARCH_OPTIONS_FAVORITES = "search_options_favorites";
 	private static final String KEY_SEARCH_OPTIONS_REVERSE_ORDER = "search_options_reverse_order";
 	private static final String KEY_SEARCH_OPTIONS_SEARCH_ORDER = "search_options_search_order";
+	private static final String KEY_SEARCH_OPTIONS_RESTRICTED = "search_options_restricted";
 	private static final String KEY_CONTENT_OPTIONS_SLIDESHOW_TIMER = "content_options_slideshow_timer";
 	
 	public static Options getOptions() {
@@ -101,8 +102,9 @@ public class FileSystemHandler {
 		document.putIfAbsent(KEY_INGEST_OPTIONS_AUTO_TAG_FIELD, false);
 		document.putIfAbsent(KEY_SEARCH_OPTIONS_FAVORITES, false);
 		document.putIfAbsent(KEY_SEARCH_OPTIONS_REVERSE_ORDER, false);
-		document.putIfAbsent(KEY_SEARCH_OPTIONS_SEARCH_ORDER, Options.SearchOptions.SearchType.HASH);
+		document.putIfAbsent(KEY_SEARCH_OPTIONS_SEARCH_ORDER, Options.SearchOptions.SortType.HASH);
 		document.putIfAbsent(KEY_CONTENT_OPTIONS_SLIDESHOW_TIMER, 5);
+		document.putIfAbsent(KEY_SEARCH_OPTIONS_RESTRICTED, false);
 		return document;
 		
 	}
@@ -114,9 +116,10 @@ public class FileSystemHandler {
 		options.setColumns(document.getInteger(KEY_OPTIONS_NUM_COLUMNS));
 		options.setResultsPerPage(document.getInteger(KEY_OPTIONS_RESULTS_PER_PAGE));
 		options.setIngestAutoTagField(document.getBoolean(KEY_INGEST_OPTIONS_AUTO_TAG_FIELD));
+		options.getSearchOptions().setRestricted(document.getBoolean(KEY_SEARCH_OPTIONS_RESTRICTED));
 		options.getSearchOptions().setFavoritesFirst(document.getBoolean(KEY_SEARCH_OPTIONS_FAVORITES));
 		options.getSearchOptions().setReverseOrder(document.getBoolean(KEY_SEARCH_OPTIONS_REVERSE_ORDER));
-		options.getSearchOptions().setSearchType(Options.SearchOptions.SearchType.valueOf(document.getString(KEY_SEARCH_OPTIONS_SEARCH_ORDER)));
+		options.getSearchOptions().setSearchType(Options.SearchOptions.SortType.valueOf(document.getString(KEY_SEARCH_OPTIONS_SEARCH_ORDER)));
 		options.setSlideshowTimer(document.getInteger(KEY_CONTENT_OPTIONS_SLIDESHOW_TIMER));
 		return options;
 		
@@ -152,6 +155,7 @@ public class FileSystemHandler {
 		document.put(KEY_OPTIONS_NUM_COLUMNS, options.getColumns());
 		document.put(KEY_OPTIONS_RESULTS_PER_PAGE, options.getResultsPerPage());
 		document.put(KEY_INGEST_OPTIONS_AUTO_TAG_FIELD, options.isIngestAutoTagField());
+		document.put(KEY_SEARCH_OPTIONS_RESTRICTED, options.getSearchOptions().isRestricted());
 		document.put(KEY_SEARCH_OPTIONS_FAVORITES, options.getSearchOptions().isFavoritesFirst());
 		document.put(KEY_SEARCH_OPTIONS_REVERSE_ORDER, options.getSearchOptions().isReverseOrder());
 		document.put(KEY_SEARCH_OPTIONS_SEARCH_ORDER, options.getSearchOptions().getSearchType().name());

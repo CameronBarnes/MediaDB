@@ -1,7 +1,7 @@
 /*
  *     Options
- *     Last Modified: 2021-07-03, 2:22 a.m.
- *     Copyright (C) 2021-07-03, 2:22 a.m.  CameronBarnes
+ *     Last Modified: 2021-07-16, 9:57 p.m.
+ *     Copyright (C) 2021-07-16, 9:57 p.m.  CameronBarnes
  *
  *     This program is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
@@ -19,6 +19,12 @@
 
 package ca.bigcattech.MediaDB.core;
 
+import ca.bigcattech.MediaDB.db.content.ContentType;
+import com.mongodb.client.model.Filters;
+import org.bson.conversions.Bson;
+
+import java.util.ArrayList;
+
 public class Options {
 	
 	private final SearchOptions mSearchOptions;
@@ -28,29 +34,22 @@ public class Options {
 	private boolean mIngestAutoTagField = false;
 	
 	public Options() {
-		
 		mSearchOptions = new SearchOptions();
 	}
 	
 	public int getSlideshowTimer() {
-		
-		System.out.println("Slideshow timer is: " + mSlideshowTimer);
 		return mSlideshowTimer;
 	}
 	
 	public void setSlideshowTimer(int slideshowTimer) {
-		
-		System.out.println("Slideshow timer is: " + mSlideshowTimer);
 		mSlideshowTimer = slideshowTimer;
 	}
 	
 	public int getResultsPerPage() {
-		
 		return mResultsPerPage;
 	}
 	
 	public void setResultsPerPage(int perPage) {
-		
 		mResultsPerPage = perPage;
 	}
 	
@@ -76,9 +75,96 @@ public class Options {
 	
 	public static class SearchOptions {
 		
+		private static final String KEY_CONTENT_TYPE = "content_type";
+		
+		private boolean mRestricted = false;
+		
 		private boolean mFavoritesFirst = false;
 		private boolean mReverseOrder = false;
-		private SearchType mSearchType = SearchType.HASH;
+		private SortType mSortType = SortType.HASH;
+		
+		private boolean mImages = true;
+		private boolean mVideos = true;
+		private boolean mGIFs = true;
+		private boolean mOther = true;
+		
+		public boolean allContentAllowed() {
+			
+			return mImages && mVideos && mGIFs && mOther;
+		}
+		
+		public Bson[] getContentTypeFilters() {
+			
+			ArrayList<Bson> types = new ArrayList<>();
+			
+			if (mImages) types.add(Filters.eq(KEY_CONTENT_TYPE, ContentType.IMAGE.name()));
+			if (mVideos) types.add(Filters.eq(KEY_CONTENT_TYPE, ContentType.VIDEO.name()));
+			if (mGIFs) types.add(Filters.eq(KEY_CONTENT_TYPE, ContentType.GIF.name()));
+			if (mOther) types.add(Filters.eq(KEY_CONTENT_TYPE, ContentType.CONTENT.name()));
+			
+			return types.toArray(new Bson[]{});
+			
+		}
+		
+		public boolean isRestricted() {
+			
+			return mRestricted;
+		}
+		
+		public void setRestricted(boolean restricted) {
+			
+			mRestricted = restricted;
+		}
+		
+		public SortType getSortType() {
+			
+			return mSortType;
+		}
+		
+		public void setSortType(SortType sortType) {
+			
+			mSortType = sortType;
+		}
+		
+		public boolean isImages() {
+			
+			return mImages;
+		}
+		
+		public void setImages(boolean images) {
+			
+			mImages = images;
+		}
+		
+		public boolean isVideos() {
+			
+			return mVideos;
+		}
+		
+		public void setVideos(boolean videos) {
+			
+			mVideos = videos;
+		}
+		
+		public boolean isGIFs() {
+			
+			return mGIFs;
+		}
+		
+		public void setGIFs(boolean GIFs) {
+			
+			mGIFs = GIFs;
+		}
+		
+		public boolean isOther() {
+			
+			return mOther;
+		}
+		
+		public void setOther(boolean other) {
+			
+			mOther = other;
+		}
 		
 		public void setFavoritesFirst(boolean favoritesFirst) {
 			
@@ -100,17 +186,17 @@ public class Options {
 			return mReverseOrder;
 		}
 		
-		public void setSearchType(SearchType searchType) {
+		public void setSearchType(SortType sortType) {
 			
-			mSearchType = searchType;
+			mSortType = sortType;
 		}
 		
-		public SearchType getSearchType() {
+		public SortType getSearchType() {
 			
-			return mSearchType;
+			return mSortType;
 		}
 		
-		public enum SearchType {
+		public enum SortType {
 			HASH,
 			TITLE,
 			VIEWS,

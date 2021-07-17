@@ -1,7 +1,7 @@
 /*
  *     MainFrame
- *     Last Modified: 2021-07-04, 4:15 a.m.
- *     Copyright (C) 2021-07-04, 4:17 a.m.  CameronBarnes
+ *     Last Modified: 2021-07-16, 9:57 p.m.
+ *     Copyright (C) 2021-07-16, 9:57 p.m.  CameronBarnes
  *
  *     This program is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
@@ -74,9 +74,9 @@ public class MainFrame extends JFrame {
 		searchOptions.add(new JLabel("Sort by: "));
 		
 		ButtonGroup searchModeButtonGroup = new ButtonGroup();
-		for (Options.SearchOptions.SearchType type: Options.SearchOptions.SearchType.values()) {
+		for (Options.SearchOptions.SortType type : Options.SearchOptions.SortType.values()) {
 			JRadioButtonMenuItem radioButton = new JRadioButtonMenuItem(type.name());
-			radioButton.addActionListener(e -> mSession.getOptions().getSearchOptions().setSearchType(Options.SearchOptions.SearchType.valueOf(radioButton.getText())));
+			radioButton.addActionListener(e -> mSession.getOptions().getSearchOptions().setSearchType(Options.SearchOptions.SortType.valueOf(radioButton.getText())));
 			if (options.getSearchOptions().getSearchType().equals(type)) radioButton.setSelected(true);
 			searchModeButtonGroup.add(radioButton);
 			searchOptions.add(radioButton);

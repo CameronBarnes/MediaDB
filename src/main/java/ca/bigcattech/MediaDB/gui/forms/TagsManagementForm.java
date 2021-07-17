@@ -1,7 +1,7 @@
 /*
  *     TagsManagementForm
- *     Last Modified: 2021-07-03, 2:15 a.m.
- *     Copyright (C) 2021-07-03, 2:22 a.m.  CameronBarnes
+ *     Last Modified: 2021-07-16, 9:11 p.m.
+ *     Copyright (C) 2021-07-16, 9:57 p.m.  CameronBarnes
  *
  *     This program is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
@@ -275,9 +275,7 @@ public class TagsManagementForm {
 	private void populateNodes() {
 		
 		for (Tag tag : mSession.getDBHandler().getAllTags()) {
-			
 			addNode(tag);
-			
 		}
 		
 	}

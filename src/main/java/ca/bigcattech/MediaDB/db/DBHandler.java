@@ -1,7 +1,7 @@
 /*
  *     DBHandler
- *     Last Modified: 2021-06-19, 9:59 p.m.
- *     Copyright (C) 2021-06-19, 9:59 p.m.  CameronBarnes
+ *     Last Modified: 2021-07-16, 9:57 p.m.
+ *     Copyright (C) 2021-07-16, 9:57 p.m.  CameronBarnes
  *
  *     This program is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
@@ -19,6 +19,7 @@
 
 package ca.bigcattech.MediaDB.db;
 
+import ca.bigcattech.MediaDB.core.Options;
 import ca.bigcattech.MediaDB.db.content.Content;
 import ca.bigcattech.MediaDB.db.content.ContentType;
 import ca.bigcattech.MediaDB.image.SimilarityFinder;
@@ -33,6 +34,7 @@ import com.mongodb.client.model.IndexOptions;
 import com.mongodb.client.model.Indexes;
 import com.mongodb.client.result.DeleteResult;
 import org.bson.Document;
+import org.bson.conversions.Bson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,7 +43,7 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ConcurrentMap;
-import java.util.stream.Collectors;
+import java.util.function.Predicate;
 
 public class DBHandler {
 	
@@ -347,37 +349,19 @@ public class DBHandler {
 		
 	}
 	
-	public Content[] searchForContentByTags(boolean restricted, String[] tags) {
+	public Content[] searchForContentByTags(Options.SearchOptions searchOptions, String[] tags) {
 		
 		MongoCollection<Document> collection = mDatabase.getCollection(COLLECTION_CONTENT);
 		List<Document> documents = new ArrayList<>();
-		if (tags.length == 0) collection.find().into(documents);
-		else collection.find(Filters.all(KEY_CONTENT_TAGS, new ArrayList<>(Arrays.asList(tags)))).into(documents);
+		if (tags.length == 0 && searchOptions.allContentAllowed()) collection.find().into(documents);
+		else collection.find(searchFilter(tags, searchOptions)).into(documents);
 		ConcurrentLinkedQueue<Content> content = new ConcurrentLinkedQueue<>();
 		
 		long start = System.currentTimeMillis();
-		documents.stream().parallel().forEach(document -> content.add(loadContentFromDocument(document)));
+		documents.stream().parallel().filter(filterRestricted(searchOptions.isRestricted())).forEach(document -> content.add(loadContentFromDocument(document)));
 		log.info("Loading content from documents took: " + (System.currentTimeMillis() - start) + "ms");
 		
-		if (!restricted) {
-			List<Content> out = content.stream().parallel().collect(Collectors.toList());
-			out.removeIf(Content::isRestricted);
-			return out.toArray(new Content[]{});
-		}
-		else {
-			return content.toArray(new Content[]{});
-		}
-		
-		//Doing this in parallel now to improve speed
-		/*for (Document document : documents) {
-			content.add(loadContentFromDocument(document));
-		}
-		
-		if (!restricted) {
-			content.removeIf(Content::isRestricted);
-		}
-		
-		return content.toArray(new Content[]{});*/
+		return content.toArray(new Content[]{});
 		
 	}
 	
@@ -657,6 +641,23 @@ public class DBHandler {
 		
 		return document;
 		
+	}
+	
+	private static Bson searchFilter(String[] tags, Options.SearchOptions searchOptions) {
+		
+		if (searchOptions.allContentAllowed())
+			return Filters.all(KEY_CONTENT_TAGS, new ArrayList<>(Arrays.asList(tags)));
+		else if (tags.length > 0) return Filters.and(
+				Filters.all(KEY_CONTENT_TAGS, new ArrayList<>(Arrays.asList(tags))),
+				Filters.or(searchOptions.getContentTypeFilters())
+		);
+		else return Filters.or(searchOptions.getContentTypeFilters());
+		
+	}
+	
+	private static Predicate<Document> filterRestricted(boolean restricted) {
+		
+		return p -> !p.getBoolean(KEY_CONTENT_RESTRICTED) || restricted;
 	}
 	
 }

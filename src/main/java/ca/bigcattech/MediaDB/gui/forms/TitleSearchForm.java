@@ -1,7 +1,7 @@
 /*
  *     TitleSearchForm
- *     Last Modified: 2021-06-18, 7:24 p.m.
- *     Copyright (C) 2021-06-18, 7:28 p.m.  CameronBarnes
+ *     Last Modified: 2021-07-16, 9:21 p.m.
+ *     Copyright (C) 2021-07-16, 9:57 p.m.  CameronBarnes
  *
  *     This program is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
@@ -44,6 +44,10 @@ public class TitleSearchForm {
 	private JLabel mNumTags;
 	private JLabel mNumContentToIngest;
 	private JLabel mNumContentInDatabase;
+	private JCheckBox mOther;
+	private JCheckBox mGIFs;
+	private JCheckBox mVideos;
+	private JCheckBox mImages;
 	
 	private final Session mSession;
 	
@@ -64,8 +68,16 @@ public class TitleSearchForm {
 		}
 		else mIngestDir.setText("Folder");
 		
-		mSearchField.addActionListener(e -> mSession.search(mSearchPrivate.isSelected(), mSearchField.getText().toLowerCase(Locale.ROOT).split(" ")));
-		mSearchButton.addActionListener(e -> mSession.search(mSearchPrivate.isSelected(), mSearchField.getText().toLowerCase(Locale.ROOT).split(" ")));
+		//Initializing checkbox values here
+		mSearchPrivate.setSelected(session.getOptions().getSearchOptions().isRestricted());
+		mImages.setSelected(session.getOptions().getSearchOptions().isImages());
+		mVideos.setSelected(session.getOptions().getSearchOptions().isVideos());
+		mGIFs.setSelected(session.getOptions().getSearchOptions().isGIFs());
+		mOther.setSelected(session.getOptions().getSearchOptions().isOther());
+		
+		//Action listeners go bellow here
+		mSearchField.addActionListener(e -> mSession.search(mSearchField.getText().toLowerCase(Locale.ROOT)));
+		mSearchButton.addActionListener(e -> mSession.search(mSearchField.getText().toLowerCase(Locale.ROOT)));
 		
 		mIngestButton.addActionListener(e -> mSession.ingest());
 		mIngestDir.addActionListener(e -> mSession.ingest(FileSystemHandler.getDirectoryWithFileChooser()));
@@ -73,6 +85,12 @@ public class TitleSearchForm {
 		
 		mSearchField.setDBHandler(mSession.getDBHandler());
 		mSearchField.setDictionary(mSession.getDictionary());
+		
+		mSearchPrivate.addActionListener(e -> mSession.getOptions().getSearchOptions().setRestricted(mSearchPrivate.isSelected()));
+		mImages.addActionListener(e -> mSession.getOptions().getSearchOptions().setImages(mImages.isSelected()));
+		mVideos.addActionListener(e -> mSession.getOptions().getSearchOptions().setVideos(mVideos.isSelected()));
+		mGIFs.addActionListener(e -> mSession.getOptions().getSearchOptions().setGIFs(mGIFs.isSelected()));
+		mOther.addActionListener(e -> mSession.getOptions().getSearchOptions().setOther(mOther.isSelected()));
 		
 	}
 	
@@ -87,23 +105,23 @@ public class TitleSearchForm {
 		
 		createUIComponents();
 		mContent = new JPanel();
-		mContent.setLayout(new GridLayoutManager(6, 9, new Insets(0, 0, 0, 0), -1, -1));
+		mContent.setLayout(new GridLayoutManager(6, 13, new Insets(0, 0, 0, 0), -1, -1));
 		final Spacer spacer1 = new Spacer();
-		mContent.add(spacer1, new GridConstraints(1, 3, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_VERTICAL, 1, GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
+		mContent.add(spacer1, new GridConstraints(1, 3, 1, 5, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_VERTICAL, 1, GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
 		final Spacer spacer2 = new Spacer();
-		mContent.add(spacer2, new GridConstraints(5, 3, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_VERTICAL, 1, GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
+		mContent.add(spacer2, new GridConstraints(5, 3, 1, 5, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_VERTICAL, 1, GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
 		mSearchField.setToolTipText("Enter tags here");
-		mContent.add(mSearchField, new GridConstraints(3, 3, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED, null, new Dimension(150, -1), null, 0, false));
+		mContent.add(mSearchField, new GridConstraints(3, 3, 1, 5, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED, null, new Dimension(150, -1), null, 0, false));
 		final Spacer spacer3 = new Spacer();
 		mContent.add(spacer3, new GridConstraints(3, 0, 1, 3, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, 1, null, null, null, 0, false));
 		mSearchButton = new JButton();
 		mSearchButton.setText("Search");
-		mContent.add(mSearchButton, new GridConstraints(3, 4, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+		mContent.add(mSearchButton, new GridConstraints(3, 8, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
 		mIngestButton = new JButton();
 		mIngestButton.setText("Ingest");
-		mContent.add(mIngestButton, new GridConstraints(0, 7, 1, 1, GridConstraints.ANCHOR_EAST, GridConstraints.FILL_VERTICAL, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, new Dimension(100, -1), 0, false));
+		mContent.add(mIngestButton, new GridConstraints(0, 11, 1, 1, GridConstraints.ANCHOR_EAST, GridConstraints.FILL_VERTICAL, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, new Dimension(100, -1), 0, false));
 		final Spacer spacer4 = new Spacer();
-		mContent.add(spacer4, new GridConstraints(0, 2, 1, 4, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, 1, null, null, null, 0, false));
+		mContent.add(spacer4, new GridConstraints(0, 2, 1, 8, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, 1, null, null, null, 0, false));
 		mSearchPrivate = new JCheckBox();
 		mSearchPrivate.setText("Search Private");
 		mContent.add(mSearchPrivate, new GridConstraints(4, 3, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
@@ -114,20 +132,32 @@ public class TitleSearchForm {
 		Font mIngestDirFont = this.$$$getFont$$$(null, Font.PLAIN, -1, mIngestDir.getFont());
 		if (mIngestDirFont != null) mIngestDir.setFont(mIngestDirFont);
 		mIngestDir.setText("Folder");
-		mContent.add(mIngestDir, new GridConstraints(0, 8, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+		mContent.add(mIngestDir, new GridConstraints(0, 12, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
 		mNumTags = new JLabel();
 		mNumTags.setText("Num Tags");
 		mContent.add(mNumTags, new GridConstraints(0, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
 		mNumContentToIngest = new JLabel();
 		mNumContentToIngest.setText("Num to ingest");
-		mContent.add(mNumContentToIngest, new GridConstraints(0, 6, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+		mContent.add(mNumContentToIngest, new GridConstraints(0, 10, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
 		mNumContentInDatabase = new JLabel();
 		mNumContentInDatabase.setText("Num Content");
-		mContent.add(mNumContentInDatabase, new GridConstraints(2, 3, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+		mContent.add(mNumContentInDatabase, new GridConstraints(2, 3, 1, 5, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
 		final Spacer spacer5 = new Spacer();
-		mContent.add(spacer5, new GridConstraints(3, 5, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, 1, null, null, null, 0, false));
+		mContent.add(spacer5, new GridConstraints(3, 9, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, 1, null, null, null, 0, false));
 		final Spacer spacer6 = new Spacer();
-		mContent.add(spacer6, new GridConstraints(1, 7, 5, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_VERTICAL, 1, GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
+		mContent.add(spacer6, new GridConstraints(1, 11, 5, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_VERTICAL, 1, GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
+		mOther = new JCheckBox();
+		mOther.setText("Other");
+		mContent.add(mOther, new GridConstraints(4, 7, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+		mGIFs = new JCheckBox();
+		mGIFs.setText("GIFs");
+		mContent.add(mGIFs, new GridConstraints(4, 6, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+		mVideos = new JCheckBox();
+		mVideos.setText("Videos");
+		mContent.add(mVideos, new GridConstraints(4, 5, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+		mImages = new JCheckBox();
+		mImages.setText("Images");
+		mContent.add(mImages, new GridConstraints(4, 4, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
 	}
 	
 	/**

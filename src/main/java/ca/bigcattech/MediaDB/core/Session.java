@@ -1,7 +1,7 @@
 /*
  *     Session
- *     Last Modified: 2021-07-03, 2:22 a.m.
- *     Copyright (C) 2021-07-03, 2:22 a.m.  CameronBarnes
+ *     Last Modified: 2021-07-16, 8:30 p.m.
+ *     Copyright (C) 2021-07-16, 9:57 p.m.  CameronBarnes
  *
  *     This program is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
@@ -53,7 +53,6 @@ public class Session {
 	private Content mContent;
 	private String[] mSearchTags;
 	private String[] mSearchTagsBlacklist;
-	private boolean mAllowRestricted = false;
 	private int mIngestTempNum = 0;
 	private int mScrollBarTempNum = 0;
 	private int mNumResultPages = 0;
@@ -187,25 +186,12 @@ public class Session {
 	public void search(String string) {
 		String[] tmp = string.toLowerCase(Locale.ROOT).split("(\\s*\\|.*\\|\\s*)");
 		if (tmp.length == 1)
-			search(mAllowRestricted, tmp[0].split(" "), new String[]{});
+			search(tmp[0].split(" "), new String[]{});
 		else
-			search(mAllowRestricted, tmp[0].split(" "), tmp[1].split(" "));
-	}
-	
-	@Deprecated
-	public void search(String[] tags) {
-		search(mAllowRestricted, tags, new String[]{});
+			search(tmp[0].split(" "), tmp[1].split(" "));
 	}
 	
 	public void search(String[] tags, String[] bannedTags) {
-		search(mAllowRestricted, tags, bannedTags);
-	}
-	
-	public void search(boolean allowRestricted, String[] tags) {
-		search(allowRestricted, tags, new String[]{});
-	}
-	
-	public void search(boolean allowRestricted, String[] tags, String[] bannedTags) {
 		
 		mNumResultPages = 0;
 		mResultPage = 0;
@@ -214,15 +200,13 @@ public class Session {
 		
 		if (tags.length == 1 && tags[0].equals("")) tags = new String[0];
 		
-		mAllowRestricted = allowRestricted;
-		
 		mSearchTags = tags;
 		mSearchTagsBlacklist = bannedTags;
 		
 		ConcurrentLinkedQueue<Content> results = new ConcurrentLinkedQueue<>();
 		
 		long start = System.currentTimeMillis();
-		Content[] unfiltered = mDBHandler.searchForContentByTags(mAllowRestricted, mSearchTags);
+		Content[] unfiltered = mDBHandler.searchForContentByTags(mOptions.getSearchOptions(), mSearchTags);
 		log.info((System.currentTimeMillis() - start) + "ms to get content from the database");
 		
 		start = System.currentTimeMillis();
@@ -261,7 +245,6 @@ public class Session {
 		
 		mIngestTempNum = 0;
 		mScrollBarTempNum = 0;
-		mAllowRestricted = false;
 		mNumResultPages = 0;
 		mResultPage = 0;
 		
