@@ -1,7 +1,7 @@
 /*
  *     SimilarityFinder
- *     Last Modified: 2021-06-18, 7:28 p.m.
- *     Copyright (C) 2021-06-18, 7:28 p.m.  CameronBarnes
+ *     Last Modified: 2021-08-02, 6:46 a.m.
+ *     Copyright (C) 2021-08-02, 6:46 a.m.  CameronBarnes
  *
  *     This program is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
@@ -30,10 +30,8 @@ import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
 import java.security.InvalidParameterException;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 /*
@@ -45,7 +43,6 @@ public class SimilarityFinder {
 	private final DBHandler mDBHandler;
 	
 	public SimilarityFinder(DBHandler dbHandler) {
-		
 		mDBHandler = dbHandler;
 	}
 	
@@ -120,7 +117,6 @@ public class SimilarityFinder {
 	}
 	
 	public List<Map.Entry<String, Double>> checkSimilarity(File thumbnail) throws IOException {
-		
 		return checkSimilarity(ImageUtils.calcImageSignature(thumbnail));
 	}
 	
@@ -130,7 +126,7 @@ public class SimilarityFinder {
 		
 		Set<Map.Entry<String, ImageSignature>> signatures = mDBHandler.getAllSignatures();
 		
-		signatures.stream().parallel().forEach(entry -> {
+		signatures.stream().parallel().filter(Objects::nonNull).forEach(entry -> {
 			double result = calcDistance(signature, entry.getValue());
 			if (result <= 1000) results.put(entry.getKey(), result);
 		});
@@ -169,6 +165,11 @@ public class SimilarityFinder {
 			return mSignature;
 		}
 		
+		/**
+		 * This converts from a 2D array of Color objects to a 2D List of colour hex String's
+		 *
+		 * @return Signature in List<List<String>> format, with the String being the Color in hex format
+		 */
 		public List<List<String>> convertDataStructure() {
 			
 			List<List<String>> output = new ArrayList<>();

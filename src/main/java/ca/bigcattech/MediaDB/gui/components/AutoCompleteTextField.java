@@ -1,7 +1,7 @@
 /*
  *     AutoCompleteTextField
- *     Last Modified: 2021-06-18, 7:28 p.m.
- *     Copyright (C) 2021-06-18, 7:28 p.m.  CameronBarnes
+ *     Last Modified: 2021-08-02, 6:46 a.m.
+ *     Copyright (C) 2021-08-02, 6:46 a.m.  CameronBarnes
  *
  *     This program is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
@@ -20,7 +20,7 @@
 package ca.bigcattech.MediaDB.gui.components;
 
 import ca.bigcattech.MediaDB.db.DBHandler;
-import ca.bigcattech.MediaDB.db.TagNameComparator;
+import ca.bigcattech.MediaDB.db.tag.TagNameComparator;
 import ca.bigcattech.MediaDB.utils.Utils;
 
 import javax.swing.*;
@@ -158,13 +158,14 @@ public class AutoCompleteTextField extends JTextField implements KeyListener, Do
 		
 		ArrayList<String> valid = new ArrayList<>();
 		
-		for (String possibility: mDictionary) {
+		for (String possibility : mDictionary) {
 			if (!mCaseSensitive) possibility = possibility.toLowerCase(Locale.ROOT);
 			if (!possibility.equals(input) && possibility.startsWith(input)) valid.add(possibility);
 		}
 		
 		if (valid.isEmpty()) return;
-		valid.sort(new TagNameComparator(mDBHandler));
+		//
+		valid.sort(new TagNameComparator(mDBHandler, valid.size()).reversed());
 		
 		mDictionary.indexOf(valid.get(0));
 		
@@ -180,7 +181,7 @@ public class AutoCompleteTextField extends JTextField implements KeyListener, Do
 	public void setDictionary(ArrayList<String> dictionary) {
 		
 		mDictionary = dictionary;
-		//Collections.sort(mDictionary);
+		//mDictionary.sort(new TagNameComparator(mDBHandler));
 	}
 	
 	public Color getIncompleteColour() {

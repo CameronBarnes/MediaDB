@@ -1,7 +1,7 @@
 /*
  *     Ingest
- *     Last Modified: 2021-07-03, 2:22 a.m.
- *     Copyright (C) 2021-07-03, 2:22 a.m.  CameronBarnes
+ *     Last Modified: 2021-07-24, 2:16 a.m.
+ *     Copyright (C) 2021-08-02, 6:46 a.m.  CameronBarnes
  *
  *     This program is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
@@ -70,6 +70,7 @@ public class Ingest {
 	//Handling ingest processes
 	private final Thread mIngestThread;
 	private final ConcurrentLinkedQueue<IngestTask> mIngestTasks = new ConcurrentLinkedQueue<>();
+	private final ConcurrentLinkedQueue<String> mHashes = new ConcurrentLinkedQueue<>();
 	private Session mSession;
 	private boolean mRun = false;
 	
@@ -175,14 +176,14 @@ public class Ingest {
 		
 		if (!folder.isDirectory()) return;
 		
-		ConcurrentLinkedQueue<String> hashes = new ConcurrentLinkedQueue<>();
+		mHashes.clear();
 		
 		Arrays.stream(Objects.requireNonNull(folder.listFiles())).parallel().forEach(file -> {
 			if (file.isDirectory()) return;
 			try {
 				String hash = Utils.getFileChecksum(MessageDigest.getInstance("SHA-256"), file);
-				if (hashes.contains(hash) || mDBHandler.checkHash(hash)) Files.delete(file.toPath());
-				else hashes.add(hash);
+				if (mHashes.contains(hash) || mDBHandler.checkHash(hash)) Files.delete(file.toPath());
+				else mHashes.add(hash);
 			}
 			catch (IOException | NoSuchAlgorithmException e) {
 				e.printStackTrace();
@@ -193,7 +194,6 @@ public class Ingest {
 	}
 	
 	public int getNumIngestTasks() {
-		
 		return mIngestTasks.size();
 	}
 	
@@ -206,6 +206,8 @@ public class Ingest {
 		
 		log.info("Creating content ingest tasks");
 		log.debug("Ingest Content");
+		
+		mHashes.clear();
 		
 		start();
 		
@@ -286,13 +288,14 @@ public class Ingest {
 			//Calculate the file's hash
 			hash();
 			//Check the database to see if we already have this file by hash
-			if (mDBHandler.checkHash(mHash)) {
+			if (mHashes.contains(mHash) || mDBHandler.checkHash(mHash)) {
 				trash(IngestResult.HASH_DUPLICATE);
 				//cancel(); Idk why we're calling cancel here, trash will do all the work that we need done
 				return true;
 			}
-			//Move the file
+			else mHashes.add(mHash);
 			
+			//Move the file
 			//If destination file already exists, delete source file and set current file to file in ingest dir
 			File dest = new File(FileSystemHandler.INGEST_PROCESS_DIR.toString() + '\\' + mHash + '.' + mExtension);
 			if (dest.exists()) {

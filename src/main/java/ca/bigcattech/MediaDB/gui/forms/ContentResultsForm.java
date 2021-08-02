@@ -1,7 +1,7 @@
 /*
  *     ContentResultsForm
- *     Last Modified: 2021-06-19, 9:59 p.m.
- *     Copyright (C) 2021-06-19, 9:59 p.m.  CameronBarnes
+ *     Last Modified: 2021-08-02, 6:46 a.m.
+ *     Copyright (C) 2021-08-02, 6:46 a.m.  CameronBarnes
  *
  *     This program is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
@@ -22,6 +22,7 @@ package ca.bigcattech.MediaDB.gui.forms;
 import ca.bigcattech.MediaDB.core.Session;
 import ca.bigcattech.MediaDB.db.content.Content;
 import ca.bigcattech.MediaDB.db.content.ContentComparator;
+import ca.bigcattech.MediaDB.db.pool.Pool;
 import ca.bigcattech.MediaDB.gui.components.AutoCompleteTextField;
 import ca.bigcattech.MediaDB.gui.components.ContentButton;
 import ca.bigcattech.MediaDB.gui.interfaces.IKeyListener;
@@ -67,19 +68,24 @@ public class ContentResultsForm implements IKeyListener {
 		mScrollPane.getVerticalScrollBar().setUnitIncrement(16);
 		mHomeButton.addActionListener(e -> {
 			mSession.home();
+			clearIcons();
 		});
 		mSearchButton.addActionListener(e -> {
-			mSession.search(mSearchBar.getText());
+			mSession.searchContent(mSearchBar.getText());
+			clearIcons();
 		});
 		mSearchBar.addActionListener(e -> {
-			mSession.search(mSearchBar.getText());
+			mSession.searchContent(mSearchBar.getText());
+			clearIcons();
 		});
 		
 		long start = System.currentTimeMillis();
-		loadContent(mSession.getResults());
+		loadContent();
 		log.info((System.currentTimeMillis() - start) + "ms to add content buttons");
 		
+		start = System.currentTimeMillis();
 		setupTagListWContentTags();
+		log.info((System.currentTimeMillis() - start) + "ms to build and sort tag list");
 		
 		mSearchBar.setDBHandler(mSession.getDBHandler());
 		mSearchBar.setDictionary(mSession.getDictionary());
@@ -103,7 +109,7 @@ public class ContentResultsForm implements IKeyListener {
 							if (!Arrays.asList(mSession.getSearchTags()).contains(selectedTag)) {
 								ArrayList<String> newSearch = new ArrayList<>(Arrays.asList(mSession.getSearchTags()));
 								newSearch.add(selectedTag);
-								mSession.search(newSearch.toArray(new String[]{}), mSession.getSearchTagsBlacklist());
+								mSession.searchContent(newSearch.toArray(new String[]{}), mSession.getSearchTagsBlacklist());
 							}
 							
 						}
@@ -113,7 +119,7 @@ public class ContentResultsForm implements IKeyListener {
 							if (!Arrays.asList(mSession.getSearchTags()).contains(selectedTag)) {
 								ArrayList<String> newBlackList = new ArrayList<>(Arrays.asList(mSession.getSearchTagsBlacklist()));
 								newBlackList.add(selectedTag);
-								mSession.search(mSession.getSearchTags(), newBlackList.toArray(new String[]{}));
+								mSession.searchContent(mSession.getSearchTags(), newBlackList.toArray(new String[]{}));
 							}
 							
 						}
@@ -138,14 +144,16 @@ public class ContentResultsForm implements IKeyListener {
 		mPageLeft.addActionListener(e -> {
 			mSession.setResultPage(mSession.getResultPage() - 1);
 			mSession.displaySession();
+			clearIcons();
 		});
 		
 		mPageRight.addActionListener(e -> {
 			mSession.setResultPage(mSession.getResultPage() + 1);
 			mSession.displaySession();
+			clearIcons();
 		});
 		
-		changeLayoutFromNumResults();
+		updateColumnsFromOptions();
 		
 	}
 	
@@ -187,22 +195,34 @@ public class ContentResultsForm implements IKeyListener {
 		
 	}
 	
-	private void loadContent(Content[] contentArr) {
+	private void loadContent() {
 		
 		ConcurrentLinkedQueue<ContentButton> buttons = new ConcurrentLinkedQueue<>();
 		
+		Content[] contentArr = new Content[]{};
+		Pool[] poolArr = new Pool[]{};
+		
 		if (mSession.getOptions().getResultsPerPage() != 0) {
 			int startIndex = mSession.getResultPage() * mSession.getOptions().getResultsPerPage();
-			if (mSession.getResultPage() == mSession.getNumResultPages() - 1) {
-				contentArr = Arrays.asList(contentArr).subList(startIndex, contentArr.length - 1).toArray(new Content[]{});
+			if (mSession.getContentResults().length > 0) {
+				contentArr = mSession.getContentResults();
+				if (mSession.getResultPage() == mSession.getNumResultPages() - 1) {
+					contentArr = Arrays.asList(contentArr).subList(startIndex, (mSession.getContentResults().length - 1)).toArray(new Content[]{});
+				}
+				else {
+					contentArr = Arrays.asList(contentArr).subList(startIndex, startIndex + mSession.getOptions().getResultsPerPage()).toArray(new Content[]{});
+				}
 			}
 			else {
-				contentArr = Arrays.asList(contentArr).subList(startIndex, startIndex + mSession.getOptions().getResultsPerPage()).toArray(new Content[]{});
+				
+				poolArr = mSession.getPoolResults();
+				
 			}
 		}
 		
 		long start = System.currentTimeMillis();
 		Arrays.stream(contentArr).parallel().forEach(content -> buttons.add(createButton(content)));
+		Arrays.stream(poolArr).parallel().forEach(pool -> buttons.add(createButton(pool)));
 		ContentButton[] lastStep = buttons.toArray(new ContentButton[0]);
 		log.info("Creating button objects took: " + (System.currentTimeMillis() - start) + "ms");
 		
@@ -219,12 +239,34 @@ public class ContentResultsForm implements IKeyListener {
 		
 	}
 	
+	private void clearIcons() {
+		
+		Arrays.stream(mContentResultPannel.getComponents())
+			  .filter(component -> component instanceof ContentButton)
+			  .map(component -> (ContentButton) component)
+			  .forEach(ContentButton::clearIcon);
+		
+	}
+	
+	private ContentButton createButton(Pool pool) {
+		
+		ContentButton contentButton = new ContentButton(pool);
+		contentButton.addActionListener(e -> {
+			mSession.pool(pool);
+			mSession.setScrollBarTempNum(mSession.getScrollBarTempNum());
+			clearIcons();
+		});
+		return contentButton;
+		
+	}
+	
 	private ContentButton createButton(Content content) {
 		
 		ContentButton contentButton = new ContentButton(content);
 		contentButton.addActionListener(e -> {
 			mSession.content(content);
 			mSession.setScrollBarTempNum(mScrollPane.getVerticalScrollBar().getValue());
+			clearIcons();
 		});
 		return contentButton;
 		
@@ -232,25 +274,27 @@ public class ContentResultsForm implements IKeyListener {
 	
 	private void setupTagListWContentTags() {
 		
-		TreeMap<String, Long> tagMap = new TreeMap<>();
+		TreeMap<String, Integer> tagMap = new TreeMap<>();
 		
-		for (Content content : mSession.getResults()) {
+		for (Content content : mSession.getContentResults()) {
 			
 			for (String tag : content.getTags()) {
 				
 				if (tagMap.containsKey(tag)) continue;
 				
-				tagMap.put(tag, mSession.getDBHandler().countContentWithTag(tag));
+				tagMap.put(tag, mSession.getDBHandler().getTagFromName(tag).getNumUses());
 				
 			}
 			
 		}
 		
-		Iterator<Entry<String, Long>> iterator = tagMap.entrySet().stream().sorted(Entry.<String, Long>comparingByValue().reversed()).iterator();
+		long start = System.currentTimeMillis();
+		Iterator<Entry<String, Integer>> iterator = tagMap.entrySet().stream().sorted(Entry.<String, Integer>comparingByValue().reversed()).iterator();
+		log.info((System.currentTimeMillis() - start) + "ms to sort content tag list");
 		
 		while (iterator.hasNext()) {
 			
-			Entry<String, Long> entry = iterator.next();
+			Entry<String, Integer> entry = iterator.next();
 			((DefaultListModel<String>) mSearchTagList.getModel()).addElement(entry.getKey() + ": " + entry.getValue());
 			
 		}
@@ -259,29 +303,28 @@ public class ContentResultsForm implements IKeyListener {
 	
 	private void setupTagListWSearchTags() {
 		
-		TreeMap<String, Long> tagMap = new TreeMap<>();
+		TreeMap<String, Integer> tagMap = new TreeMap<>();
 		
 		for (String tag : mSession.getSearchTags()) {
 			
-			tagMap.put(tag, mSession.getDBHandler().countContentWithTag(tag));
+			tagMap.put(tag, mSession.getDBHandler().getTagFromName(tag).getNumUses());
 			
 		}
 		
-		Iterator<Entry<String, Long>> iterator = tagMap.entrySet().stream().sorted(Entry.<String, Long>comparingByValue().reversed()).iterator();
+		Iterator<Entry<String, Integer>> iterator = tagMap.entrySet().stream().sorted(Entry.<String, Integer>comparingByValue().reversed()).iterator();
 		
 		while (iterator.hasNext()) {
 			
-			Entry<String, Long> entry = iterator.next();
+			Entry<String, Integer> entry = iterator.next();
 			((DefaultListModel<String>) mSearchTagList.getModel()).addElement(entry.getKey() + ": " + entry.getValue());
 			
 		}
 		
 	}
 	
-	public void changeLayoutFromNumResults() {
+	public void updateColumnsFromOptions() {
 		
 		mContentResultPannel.setLayout(new GridLayout(0, mSession.getOptions().getColumns()));
-		
 	}
 	
 	private void createUIComponents() {

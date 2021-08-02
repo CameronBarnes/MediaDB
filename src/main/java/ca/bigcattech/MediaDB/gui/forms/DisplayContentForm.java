@@ -1,7 +1,7 @@
 /*
  *     DisplayContentForm
- *     Last Modified: 2021-07-03, 2:22 a.m.
- *     Copyright (C) 2021-07-03, 2:22 a.m.  CameronBarnes
+ *     Last Modified: 2021-08-01, 11:22 a.m.
+ *     Copyright (C) 2021-08-02, 6:46 a.m.  CameronBarnes
  *
  *     This program is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
@@ -23,9 +23,10 @@ import ca.bigcattech.MediaDB.IO.FileSystemHandler;
 import ca.bigcattech.MediaDB.IO.FileTransferable;
 import ca.bigcattech.MediaDB.IO.ImageSelection;
 import ca.bigcattech.MediaDB.core.Session;
-import ca.bigcattech.MediaDB.db.Tag;
 import ca.bigcattech.MediaDB.db.content.Content;
 import ca.bigcattech.MediaDB.db.content.ContentType;
+import ca.bigcattech.MediaDB.db.pool.Pool;
+import ca.bigcattech.MediaDB.db.tag.Tag;
 import ca.bigcattech.MediaDB.gui.components.AutoCompleteTextField;
 import ca.bigcattech.MediaDB.gui.interfaces.IKeyListener;
 import ca.bigcattech.MediaDB.utils.Utils;
@@ -80,6 +81,10 @@ public class DisplayContentForm implements IKeyListener {
 	private JButton mDelete;
 	private JButton mCopy;
 	private JLabel mTimeSpent;
+	private JComboBox<String> mPoolBox;
+	private JButton mAddToPool;
+	private JButton mPoolView;
+	private JTextField mTitleField;
 	
 	private JButton mSkipButton;
 	private JButton mRewindButton;
@@ -97,9 +102,25 @@ public class DisplayContentForm implements IKeyListener {
 		mSession = session;
 		$$$setupUI$$$();
 		
+		if (!session.isContentFromPool()) {
+			mPoolBox.addItem("Results");
+			mPoolView.setEnabled(false);
+		}
+		
+		String currPoolName = session.getPool() == null ? null : session.getPool().getTitle();
+		
+		for (Pool pool : session.getDBHandler().getPoolFromUID(content.getPools())) {
+			if (currPoolName != null && pool.getTitle().equals(currPoolName)) {
+				mPoolBox.addItem(currPoolName);
+				mPoolBox.setSelectedItem(currPoolName);
+				mPoolView.setEnabled(true);
+			}
+			else mPoolBox.addItem(pool.getTitle());
+		}
+		
 		addTag(content.getTags());
 		mDescription.setText(content.getDescription());
-		mTitle.setText(content.getTitle());
+		mTitleField.setText(content.getTitle());
 		mViews.setText("Views: " + mContent.incrementViews());
 		mPrivate.setSelected(mContent.isPrivate());
 		mFavoriteCheckBox.setSelected(mContent.isFavorite());
@@ -235,7 +256,6 @@ public class DisplayContentForm implements IKeyListener {
 		mSearch.setDBHandler(mSession.getDBHandler());
 		mSearch.setDictionary(mSession.getDictionary());
 		
-		
 		mAddTagField.addActionListener(e -> {
 			addTag(mAddTagField.getText().toLowerCase().split(" "));
 			mAddTagField.setText("");
@@ -254,12 +274,12 @@ public class DisplayContentForm implements IKeyListener {
 		});
 		
 		mSearch.addActionListener(e -> {
-			mSession.search(mSearch.getText());
+			mSession.searchContent(mSearch.getText());
 			exit();
 		});
 		
 		mButtonSearch.addActionListener(e -> {
-			mSession.search(mSearch.getText());
+			mSession.searchContent(mSearch.getText());
 			exit();
 		});
 		
@@ -272,24 +292,33 @@ public class DisplayContentForm implements IKeyListener {
 			}
 		});
 		
+		mTitleField.addKeyListener(new KeyAdapter() {
+			@Override
+			public void keyTyped(KeyEvent e) {
+				
+				super.keyTyped(e);
+				mContent.setTitle(mTitleField.getText());
+			}
+		});
+		
 		mPrivate.addActionListener(e -> mContent.setPrivate(mPrivate.isSelected()));
 		mFavoriteCheckBox.addActionListener(e -> mContent.setFavorite(mFavoriteCheckBox.isSelected()));
 		
-		int temp = Arrays.asList(mSession.getResults()).indexOf(mContent);
+		int temp = Arrays.asList(mSession.getContentResults()).indexOf(mContent);
 		if (temp == 0) mButtonPrevious.setEnabled(false);
 		mButtonPrevious.addActionListener(e -> {
-			int index = Arrays.asList(mSession.getResults()).indexOf(mContent);
+			int index = Arrays.asList(mSession.getContentResults()).indexOf(mContent);
 			if (index == 0) return;
 			exit();
-			mSession.content(mSession.getResults()[index - 1]);
+			mSession.content(mSession.getContentResults()[index - 1]);
 		});
 		
-		if (temp == mSession.getResults().length - 1) mButtonNext.setEnabled(false);
+		if (temp == mSession.getContentResults().length - 1) mButtonNext.setEnabled(false);
 		mButtonNext.addActionListener(e -> {
-			int index = Arrays.asList(mSession.getResults()).indexOf(mContent);
-			if (index == mSession.getResults().length) return;
+			int index = Arrays.asList(mSession.getContentResults()).indexOf(mContent);
+			if (index == mSession.getContentResults().length) return;
 			exit();
-			mSession.content(mSession.getResults()[index + 1]);
+			mSession.content(mSession.getContentResults()[index + 1]);
 		});
 		
 		mTags.addMouseListener(new MouseAdapter() {
@@ -306,7 +335,7 @@ public class DisplayContentForm implements IKeyListener {
 					if (evt.getButton() == MouseEvent.BUTTON1 && r != null && r.contains(evt.getPoint())) {
 						
 						String selectedTag = mTags.getSelectedValue().split(":")[0];
-						mContent.removeTag(selectedTag);
+						mContent.removeTag(selectedTag, mSession.getDBHandler());
 						
 						((DefaultListModel<String>) mTags.getModel()).removeElement(selectedTag);
 						
@@ -406,7 +435,7 @@ public class DisplayContentForm implements IKeyListener {
 		String[] out = tagsToAdd.toArray(new String[]{});
 		
 		mSession.addTagToDictionary(out);
-		mContent.addTags(out);
+		mContent.addTags(out, mSession.getDBHandler());
 		
 	}
 	
@@ -476,6 +505,7 @@ public class DisplayContentForm implements IKeyListener {
 		createUIComponents();
 		mContentPannel = new JPanel();
 		mContentPannel.setLayout(new GridLayoutManager(2, 5, new Insets(0, 0, 0, 0), -1, -1));
+		mContentPannel.setMinimumSize(new Dimension(900, 600));
 		mButtonSearch = new JButton();
 		mButtonSearch.setText("Search");
 		mContentPannel.add(mButtonSearch, new GridConstraints(0, 4, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
@@ -489,57 +519,77 @@ public class DisplayContentForm implements IKeyListener {
 		panel1.setLayout(new GridLayoutManager(9, 3, new Insets(0, 0, 0, 0), -1, -1));
 		mScrollPane.setViewportView(panel1);
 		final JPanel panel2 = new JPanel();
-		panel2.setLayout(new GridLayoutManager(4, 5, new Insets(0, 0, 0, 0), -1, -1));
+		panel2.setLayout(new GridLayoutManager(5, 6, new Insets(0, 0, 0, 0), -1, -1));
 		panel1.add(panel2, new GridConstraints(7, 1, 2, 2, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
 		mTitle = new JLabel();
-		mTitle.setText("Title");
-		panel2.add(mTitle, new GridConstraints(0, 0, 1, 3, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+		mTitle.setText("Title:");
+		panel2.add(mTitle, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, 1, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
 		mDescription = new JTextArea();
 		mDescription.setEditable(true);
 		mDescription.setEnabled(true);
-		panel2.add(mDescription, new GridConstraints(1, 0, 2, 4, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_WANT_GROW, null, new Dimension(150, 50), null, 0, false));
+		panel2.add(mDescription, new GridConstraints(2, 0, 2, 5, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_WANT_GROW, null, new Dimension(150, 50), null, 0, false));
 		mViews = new JLabel();
 		mViews.setText("Views: ");
-		panel2.add(mViews, new GridConstraints(0, 4, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+		panel2.add(mViews, new GridConstraints(0, 5, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
 		mFavoriteCheckBox = new JCheckBox();
 		mFavoriteCheckBox.setText("Favorite");
-		panel2.add(mFavoriteCheckBox, new GridConstraints(3, 4, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+		panel2.add(mFavoriteCheckBox, new GridConstraints(4, 5, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
 		mDelete = new JButton();
 		mDelete.setText("Delete");
-		panel2.add(mDelete, new GridConstraints(3, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+		panel2.add(mDelete, new GridConstraints(4, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
 		final Spacer spacer1 = new Spacer();
-		panel2.add(spacer1, new GridConstraints(3, 2, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, 1, null, null, null, 0, false));
-		mCopy = new JButton();
-		mCopy.setText("Copy");
-		panel2.add(mCopy, new GridConstraints(3, 1, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+		panel2.add(spacer1, new GridConstraints(4, 2, 1, 2, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, 1, null, null, null, 0, false));
 		mTimeSpent = new JLabel();
 		mTimeSpent.setText("Watch Time:");
-		panel2.add(mTimeSpent, new GridConstraints(1, 4, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+		panel2.add(mTimeSpent, new GridConstraints(2, 5, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
 		mPrivate = new JCheckBox();
 		mPrivate.setText("Private");
-		panel2.add(mPrivate, new GridConstraints(3, 3, 1, 1, GridConstraints.ANCHOR_EAST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+		panel2.add(mPrivate, new GridConstraints(4, 4, 1, 1, GridConstraints.ANCHOR_EAST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+		mTitleField = new JTextField();
+		panel2.add(mTitleField, new GridConstraints(0, 2, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED, null, new Dimension(150, -1), null, 0, false));
+		final Spacer spacer2 = new Spacer();
+		panel2.add(spacer2, new GridConstraints(0, 3, 1, 2, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, 1, null, null, null, 0, false));
+		final JLabel label1 = new JLabel();
+		label1.setText("Description:");
+		panel2.add(label1, new GridConstraints(1, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+		final Spacer spacer3 = new Spacer();
+		panel2.add(spacer3, new GridConstraints(1, 1, 1, 5, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, 1, null, null, null, 0, false));
+		mCopy = new JButton();
+		mCopy.setText("Copy");
+		panel2.add(mCopy, new GridConstraints(4, 1, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
 		mMediaPlayerPanel = new JPanel();
 		mMediaPlayerPanel.setLayout(new BorderLayout(0, 0));
 		panel1.add(mMediaPlayerPanel, new GridConstraints(1, 1, 5, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
-		final Spacer spacer2 = new Spacer();
-		panel1.add(spacer2, new GridConstraints(1, 2, 5, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_VERTICAL, 1, GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
-		final Spacer spacer3 = new Spacer();
-		panel1.add(spacer3, new GridConstraints(0, 1, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, 1, null, null, null, 0, false));
+		final Spacer spacer4 = new Spacer();
+		panel1.add(spacer4, new GridConstraints(1, 2, 5, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_VERTICAL, 1, GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
+		final Spacer spacer5 = new Spacer();
+		panel1.add(spacer5, new GridConstraints(0, 1, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, 1, null, null, null, 0, false));
 		final JPanel panel3 = new JPanel();
-		panel3.setLayout(new GridLayoutManager(3, 2, new Insets(0, 0, 0, 0), -1, -1));
+		panel3.setLayout(new GridLayoutManager(5, 5, new Insets(0, 0, 0, 0), -1, -1));
 		panel3.setOpaque(false);
 		panel1.add(panel3, new GridConstraints(0, 0, 9, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, 1, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, null, new Dimension(400, -1), 0, false));
 		mTags.setName("Tags");
 		mTags.setToolTipText("Tags");
 		mTags.setVisibleRowCount(20);
-		panel3.add(mTags, new GridConstraints(1, 0, 1, 2, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_WANT_GROW, null, new Dimension(150, 50), null, 0, false));
-		final JLabel label1 = new JLabel();
-		label1.setText("Tags");
-		panel3.add(label1, new GridConstraints(0, 0, 1, 2, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
-		panel3.add(mAddTagField, new GridConstraints(2, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED, null, new Dimension(150, -1), null, 0, false));
+		panel3.add(mTags, new GridConstraints(3, 0, 1, 5, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_WANT_GROW, null, new Dimension(150, 50), null, 0, false));
 		final JLabel label2 = new JLabel();
-		label2.setText("Add Tags: ");
+		label2.setText("Tags");
 		panel3.add(label2, new GridConstraints(2, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+		panel3.add(mAddTagField, new GridConstraints(4, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED, null, new Dimension(150, -1), null, 0, false));
+		final JLabel label3 = new JLabel();
+		label3.setText("Add Tags: ");
+		panel3.add(label3, new GridConstraints(4, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+		mPoolBox = new JComboBox();
+		panel3.add(mPoolBox, new GridConstraints(1, 0, 1, 2, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+		final JLabel label4 = new JLabel();
+		label4.setText("Pool:");
+		panel3.add(label4, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+		mPoolView = new JButton();
+		mPoolView.setText("View");
+		panel3.add(mPoolView, new GridConstraints(1, 3, 1, 1, GridConstraints.ANCHOR_SOUTHWEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, 1, null, null, null, 0, false));
+		mAddToPool = new JButton();
+		mAddToPool.setText("Add");
+		panel3.add(mAddToPool, new GridConstraints(1, 2, 1, 1, GridConstraints.ANCHOR_SOUTHWEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
 		mControlsPanel = new JPanel();
 		mControlsPanel.setLayout(new BorderLayout(0, 0));
 		panel1.add(mControlsPanel, new GridConstraints(6, 1, 1, 2, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
@@ -592,7 +642,7 @@ public class DisplayContentForm implements IKeyListener {
 		else if (control && mRewindButton != null && e.getKeyCode() == KeyEvent.VK_LEFT) mRewindButton.doClick();
 		else if (e.getKeyCode() == KeyEvent.VK_RIGHT) next(false);
 		else if (e.getKeyCode() == KeyEvent.VK_LEFT) previous(false);
-		else if (e.getKeyCode() == KeyEvent.VK_BACK_SPACE) mButtonBack.doClick();
+		else if (control && e.getKeyCode() == KeyEvent.VK_BACK_SPACE) mButtonBack.doClick();
 		
 	}
 	

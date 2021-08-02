@@ -1,7 +1,7 @@
 /*
  *     MainFrame
- *     Last Modified: 2021-07-16, 9:57 p.m.
- *     Copyright (C) 2021-07-16, 9:57 p.m.  CameronBarnes
+ *     Last Modified: 2021-07-18, 8:53 p.m.
+ *     Copyright (C) 2021-08-02, 6:46 a.m.  CameronBarnes
  *
  *     This program is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
@@ -260,7 +260,7 @@ public class MainFrame extends JFrame {
 		
 	}
 	
-	public ContentResultsForm displayContentResults() {
+	public ContentResultsForm displaySearchResults() {
 		
 		mTempIngestProgressForm = null; //Just cleaning this up so it's not sticking around when we dont need it
 		

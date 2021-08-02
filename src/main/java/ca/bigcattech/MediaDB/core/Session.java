@@ -1,7 +1,7 @@
 /*
  *     Session
- *     Last Modified: 2021-07-16, 8:30 p.m.
- *     Copyright (C) 2021-07-16, 9:57 p.m.  CameronBarnes
+ *     Last Modified: 2021-08-02, 6:46 a.m.
+ *     Copyright (C) 2021-08-02, 6:46 a.m.  CameronBarnes
  *
  *     This program is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
@@ -21,10 +21,13 @@ package ca.bigcattech.MediaDB.core;
 
 import ca.bigcattech.MediaDB.IO.FileSystemHandler;
 import ca.bigcattech.MediaDB.db.DBHandler;
-import ca.bigcattech.MediaDB.db.TagNameComparator;
 import ca.bigcattech.MediaDB.db.content.Content;
 import ca.bigcattech.MediaDB.db.content.ContentComparator;
 import ca.bigcattech.MediaDB.db.content.ContentType;
+import ca.bigcattech.MediaDB.db.pool.Pool;
+import ca.bigcattech.MediaDB.db.pool.PoolBuilder;
+import ca.bigcattech.MediaDB.db.tag.Tag;
+import ca.bigcattech.MediaDB.db.tag.TagNameComparator;
 import ca.bigcattech.MediaDB.gui.forms.DisplayContentForm;
 import ca.bigcattech.MediaDB.gui.frames.MainFrame;
 import ca.bigcattech.MediaDB.gui.interfaces.IKeyListener;
@@ -48,9 +51,13 @@ public class Session {
 	private final DBHandler mDBHandler;
 	private final Ingest mIngest;
 	private final ArrayList<String> mDictionary = new ArrayList<>();
+	private volatile boolean mSorting = false;
 	private SessionState mSessionState;
-	private Content[] mResults;
+	private Content[] mContentResults;
 	private Content mContent;
+	private Pool[] mPoolResults;
+	private Pool mPool;
+	private boolean mContentFromPool = false;
 	private String[] mSearchTags;
 	private String[] mSearchTagsBlacklist;
 	private int mIngestTempNum = 0;
@@ -157,7 +164,7 @@ public class Session {
 	public void updateDictionary() {
 		
 		synchronized (mDictionary) {
-			mDBHandler.getAllTags().forEach(tag -> mDictionary.add(tag.getName()));
+			mDBHandler.getAllTags().stream().map(Tag::getName).filter(tag -> !mDictionary.contains(tag)).forEach(mDictionary::add);
 		}
 		
 		sortDictionary();
@@ -183,20 +190,65 @@ public class Session {
 		
 	}
 	
-	public void search(String string) {
+	public void searchPools(String string) {
+		
 		String[] tmp = string.toLowerCase(Locale.ROOT).split("(\\s*\\|.*\\|\\s*)");
 		if (tmp.length == 1)
-			search(tmp[0].split(" "), new String[]{});
+			searchPools(tmp[0].split(" "), new String[]{});
 		else
-			search(tmp[0].split(" "), tmp[1].split(" "));
+			searchPools(tmp[0].split(" "), tmp[1].split(" "));
 	}
 	
-	public void search(String[] tags, String[] bannedTags) {
+	public void searchPools(String[] tags, String[] bannedTags) {
 		
 		mNumResultPages = 0;
 		mResultPage = 0;
 		
-		log.info("Search");
+		log.info("Search pools");
+		
+		if (tags.length == 1 && tags[0].equals("")) tags = new String[0];
+		
+		mSearchTags = tags;
+		mSearchTagsBlacklist = bannedTags;
+		
+		ConcurrentLinkedQueue<Pool> results = new ConcurrentLinkedQueue<>();
+		
+		long start = System.currentTimeMillis();
+		Pool[] unfiltered = mDBHandler.searchForPoolsByTags(mOptions.getSearchOptions().isRestricted(), tags);
+		log.info((System.currentTimeMillis() - start) + "ms to get Pools from the database");
+		
+		start = System.currentTimeMillis();
+		Arrays.stream(unfiltered).parallel().forEach(pool -> {
+			if (checkPoolWithBlackList(pool)) results.add(pool);
+		});
+		log.info((System.currentTimeMillis() - start) + "ms to remove blacklisted pools");
+		
+		mPoolResults = results.toArray(new Pool[]{});
+		
+		//TODO sort the results
+		
+		if (mPoolResults.length > 0) {
+			mSessionState = SessionState.SEARCH_RESULTS;
+			displaySession();
+		}
+		
+	}
+	
+	public void searchContent(String string) {
+		
+		String[] tmp = string.toLowerCase(Locale.ROOT).split("(\\s*\\|.*\\|\\s*)");
+		if (tmp.length == 1)
+			searchContent(tmp[0].split(" "), new String[]{});
+		else
+			searchContent(tmp[0].split(" "), tmp[1].split(" "));
+	}
+	
+	public void searchContent(String[] tags, String[] bannedTags) {
+		
+		mNumResultPages = 0;
+		mResultPage = 0;
+		
+		log.info("Search content");
 		
 		if (tags.length == 1 && tags[0].equals("")) tags = new String[0];
 		
@@ -215,7 +267,7 @@ public class Session {
 		});
 		log.info((System.currentTimeMillis() - start) + "ms to remove blacklisted content");
 		
-		mResults = results.toArray(new Content[]{});
+		mContentResults = results.toArray(new Content[]{});
 		
 		//Hash only sort
 		/*start = System.currentTimeMillis();
@@ -225,10 +277,10 @@ public class Session {
 		//Dynamic search options
 		start = System.currentTimeMillis();
 		ContentComparator comparator = new ContentComparator(mOptions.getSearchOptions());
-		Arrays.sort(mResults, comparator);
+		Arrays.sort(mContentResults, comparator);
 		log.info((System.currentTimeMillis() - start) + "ms to sort content");
 		
-		if (mResults.length > 0) {
+		if (mContentResults.length > 0) {
 			
 			mSessionState = SessionState.SEARCH_RESULTS;
 			displaySession();
@@ -238,7 +290,13 @@ public class Session {
 	}
 	
 	private boolean checkContentWithBlacklist(Content content) {
+		
 		return !Utils.stringArrContainsStrFromArray(content.getTags(), mSearchTagsBlacklist);
+	}
+	
+	private boolean checkPoolWithBlackList(Pool pool) {
+		
+		return !Utils.stringArrContainsStrFromArray(pool.getAllTags(), mSearchTagsBlacklist);
 	}
 	
 	public void home() {
@@ -247,18 +305,21 @@ public class Session {
 		mScrollBarTempNum = 0;
 		mNumResultPages = 0;
 		mResultPage = 0;
+		mContentFromPool = false;
 		
 		mKeyListener = null;
 		
 		log.info("Home");
 		
 		mSessionState = SessionState.HOME;
-		mResults = new Content[]{};
+		mContentResults = new Content[]{};
 		mSearchTags = new String[]{};
 		mSearchTagsBlacklist = new String[]{};
 		
 		mMainFrame.displayHome();
 		mMainFrame.setBackgroundColor(Color.GRAY);
+		
+		System.gc();
 		
 	}
 	
@@ -267,14 +328,17 @@ public class Session {
 		log.info("Search results");
 		
 		mKeyListener = null;
+		mContentFromPool = false;
+		
+		int resultsLength = mContentResults.length > 0 ? mContentResults.length : mPoolResults.length;
 		
 		if (mResultPage == 0 && mOptions.getResultsPerPage() != 0) {
-			mNumResultPages = mResults.length / mOptions.getResultsPerPage();
-			if (mResults.length % mOptions.getResultsPerPage() > 0) mNumResultPages++;
+			mNumResultPages = resultsLength / mOptions.getResultsPerPage();
+			if (resultsLength % mOptions.getResultsPerPage() > 0) mNumResultPages++;
 		}
 		long start = System.currentTimeMillis();
 		
-		mKeyListener = mMainFrame.displayContentResults();
+		mKeyListener = mMainFrame.displaySearchResults();
 		
 		mSessionState = SessionState.SEARCH_RESULTS;
 		mMainFrame.setBackgroundColor(Color.GRAY);
@@ -304,7 +368,32 @@ public class Session {
 		
 	}
 	
+	public void pool(Pool pool) {
+		
+		mPool = pool;
+		pool();
+		
+	}
+	
+	public void pool() {
+		
+		mKeyListener = null;
+		
+		//TODO do stuff here
+		
+	}
+	
+	public void newPoolWithContent(String poolName, Content content) {
+		
+		Pool pool = PoolBuilder.newPool(mDBHandler);
+		pool.setTitle(poolName);
+		pool.setContentHashes(new String[]{content.getHash()});
+		mDBHandler.exportPool(pool);
+		
+	}
+	
 	public void setKeyListener(IKeyListener listener) {
+		
 		mKeyListener = listener;
 	}
 	
@@ -313,6 +402,7 @@ public class Session {
 		mScrollBarTempNum = 0;
 		mNumResultPages = 0;
 		mResultPage = 0;
+		mContentFromPool = false;
 		
 		log.info("Ingest");
 		
@@ -320,7 +410,7 @@ public class Session {
 		
 		boolean update = mSessionState == SessionState.INGEST || mSessionState == SessionState.INGEST_TASK;
 		mSessionState = SessionState.INGEST;
-		mResults = new Content[]{};
+		mContentResults = new Content[]{};
 		mSearchTags = new String[]{};
 		mSearchTagsBlacklist = new String[]{};
 		if (!update) {
@@ -349,7 +439,7 @@ public class Session {
 		
 		boolean update = mSessionState == SessionState.INGEST || mSessionState == SessionState.INGEST_TASK;
 		mSessionState = SessionState.INGEST;
-		mResults = new Content[]{};
+		mContentResults = new Content[]{};
 		mSearchTags = new String[]{};
 		mSearchTagsBlacklist = new String[]{};
 		if (!update) {
@@ -388,6 +478,7 @@ public class Session {
 		mScrollBarTempNum = 0;
 		mNumResultPages = 0;
 		mResultPage = 0;
+		mContentFromPool = false;
 		
 		log.info("Tags");
 		
@@ -397,17 +488,14 @@ public class Session {
 	}
 	
 	public int getIngestTempNum() {
-		
 		return mIngestTempNum;
 	}
 	
 	public int getScrollBarTempNum() {
-		
 		return mScrollBarTempNum;
 	}
 	
 	public void setScrollBarTempNum(int num) {
-		
 		mScrollBarTempNum = num;
 	}
 	
@@ -421,11 +509,22 @@ public class Session {
 		return mResultPage;
 	}
 	
+	public void setContentFromPool(boolean contentFromPool) {
+		
+		mContentFromPool = contentFromPool;
+	}
+	
+	public boolean isContentFromPool() {
+		
+		return mContentFromPool;
+	}
+	
 	public void setResultPage(int page) {
 		
 		if (page < 0) mResultPage = 0;
 		else if (page > mNumResultPages - 1) mResultPage = mNumResultPages - 1;
 		else mResultPage = page;
+		
 	}
 	
 	public Ingest getIngest() {
@@ -470,15 +569,24 @@ public class Session {
 		}
 	}
 	
-	private void sortDictionary() {
+	private synchronized void sortDictionary() {
 		
-		synchronized (mDictionary) {
-			new Thread(() -> mDictionary.sort(new TagNameComparator(mDBHandler))).start();
-		}
+		if (mSorting) return;
+		
+		new Thread(() -> {
+			try {
+				mSorting = true;
+				mDictionary.sort(new TagNameComparator(mDBHandler, mDictionary.size()).reversed());
+				mSorting = false;
+			}
+			catch (IllegalArgumentException e) {
+				e.printStackTrace();
+			}
+		}).start();
+		
 	}
 	
 	public void addTagToDictionary(String tag) {
-		
 		addTagToDictionary(new String[]{tag});
 	}
 	
@@ -502,25 +610,21 @@ public class Session {
 	}
 	
 	public void setVolume(int volume) {
-		
 		if (volume > 100) mVolume = 100;
 		else mVolume = Math.max(volume, 0);
 	}
 	
 	public int getVolume() {
-		
 		return mVolume;
 	}
 	
 	public void removeTagFromDictionary(String tag) {
-		
 		synchronized (mDictionary) {
 			mDictionary.remove(tag);
 		}
 	}
 	
 	public String[] getSearchTags() {
-		
 		return mSearchTags;
 	}
 	
@@ -534,9 +638,19 @@ public class Session {
 		return mSessionState;
 	}
 	
-	public Content[] getResults() {
+	public Content[] getContentResults() {
 		
-		return mResults;
+		return mContentResults;
+	}
+	
+	public Pool[] getPoolResults() {
+		
+		return mPoolResults;
+	}
+	
+	public Pool getPool() {
+		
+		return mPool;
 	}
 	
 	public Content getContent() {

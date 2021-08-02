@@ -1,7 +1,7 @@
 /*
  *     TagsManagementForm
- *     Last Modified: 2021-07-16, 9:11 p.m.
- *     Copyright (C) 2021-07-16, 9:57 p.m.  CameronBarnes
+ *     Last Modified: 2021-08-01, 1:27 p.m.
+ *     Copyright (C) 2021-08-02, 6:46 a.m.  CameronBarnes
  *
  *     This program is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
@@ -20,7 +20,7 @@
 package ca.bigcattech.MediaDB.gui.forms;
 
 import ca.bigcattech.MediaDB.core.Session;
-import ca.bigcattech.MediaDB.db.Tag;
+import ca.bigcattech.MediaDB.db.tag.Tag;
 import ca.bigcattech.MediaDB.gui.components.AutoCompleteTextField;
 import ca.bigcattech.MediaDB.utils.Utils;
 import com.intellij.uiDesigner.core.GridConstraints;
@@ -38,6 +38,7 @@ import javax.swing.tree.TreeSelectionModel;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.util.List;
 import java.util.*;
 
 public class TagsManagementForm {
@@ -57,7 +58,7 @@ public class TagsManagementForm {
 		
 	};
 	private final Session mSession;
-	private final ArrayList<Tag> mUpdatedTags = new ArrayList<>();
+	private final LinkedList<Tag> mUpdatedTags = new LinkedList<>();
 	public JPanel mContent;
 	private JTree mTagTree;
 	private JLabel mTagName;
@@ -237,14 +238,14 @@ public class TagsManagementForm {
 			if (mCurrentTag == null) return;
 			if (JOptionPane.showConfirmDialog(mContent, "Delete tag: " + mCurrentTag.getName() + " ?") != JOptionPane.YES_OPTION)
 				return;
-			mSession.getDBHandler().removeTagFromAllContent(mCurrentTag.getName());
+			mSession.getDBHandler().removeTagFromAll(mCurrentTag.getName());
 			mSession.getDBHandler().deleteTag(mCurrentTag.getName());
 			mUpdatedTags.remove(mCurrentTag);
 			mCurrentTag = null;
 			mReload.doClick();
 		});
 		
-		mForce.addActionListener(e -> mSession.getDBHandler().updateAllContent());
+		mForce.addActionListener(e -> mSession.getDBHandler().updateAll());
 		
 	}
 	
@@ -313,7 +314,7 @@ public class TagsManagementForm {
 		if (child == null) child = new Tag(tag);
 		
 		child.addParentTag(mCurrentTag.getName());
-		mSession.getDBHandler().exportTag(child);
+		mSession.getDBHandler().exportTag(child, false);
 		
 		addUpdatedTag(child);
 		
@@ -325,7 +326,7 @@ public class TagsManagementForm {
 		
 		child.removeParentTag(mCurrentTag.getName());
 		addUpdatedTag(child);
-		mSession.getDBHandler().exportTag(child);
+		mSession.getDBHandler().exportTag(child, false);
 		
 	}
 	
@@ -451,7 +452,7 @@ public class TagsManagementForm {
 	
 	private void displayTag(Tag tag) {
 		
-		if (mCurrentTag != null) mSession.getDBHandler().exportTag(mCurrentTag);
+		if (mCurrentTag != null) mSession.getDBHandler().exportTag(mCurrentTag, false);
 		mCurrentTag = tag;
 		
 		mTagName.setText(tag.getName());
@@ -467,14 +468,17 @@ public class TagsManagementForm {
 		}
 		
 		mChildList.setModel(new DefaultListModel<>());
-		ArrayList<Tag> inModel = new ArrayList<>();
-		for (Tag child : mSession.getDBHandler().getAllTagsWithParent(tag.getName())) {
+		List<Tag> allChildTags = mSession.getDBHandler().getAllTagsWithParent(tag.getName());
+		ArrayList<Tag> inModel = new ArrayList<>(allChildTags.size());
+		for (Tag child : allChildTags) {
 			
 			if (inModel.stream().parallel().anyMatch(tagInfo -> tagInfo.getName().equals(child.getName()))) continue;
 			inModel.add(child);
 			((DefaultListModel<Tag>) mChildList.getModel()).addElement(child);
 			
 		}
+		
+		inModel.trimToSize();
 		
 		sortChildTagList();
 		sortParentTagList();
@@ -483,8 +487,9 @@ public class TagsManagementForm {
 	
 	private void exit() {
 		
-		if (mCurrentTag != null) mSession.getDBHandler().exportTag(mCurrentTag);
-		mSession.getDBHandler().updateAllContentWithTags(mUpdatedTags.toArray(new Tag[]{}));
+		if (mCurrentTag != null) mSession.getDBHandler().exportTag(mCurrentTag, false);
+		mSession.getDBHandler().updateAllWithTags(mUpdatedTags.toArray(new Tag[]{}));
+		mSession.getDBHandler().updateAllTags(mUpdatedTags.toArray(new Tag[]{}));
 		
 	}
 	
@@ -605,7 +610,6 @@ public class TagsManagementForm {
 	
 	private class TagInfo {
 		
-		private long mNumUses = 0;
 		private Tag mTag;
 		
 		public TagInfo(String name) {
@@ -613,34 +617,35 @@ public class TagsManagementForm {
 			mTag = mSession.getDBHandler().getTagFromName(name);
 			if (mTag == null) {
 				mTag = new Tag(name);
-				mSession.getDBHandler().exportTag(mTag);
+				mSession.getDBHandler().exportTag(mTag, false);
 			}
-			mNumUses = mSession.getDBHandler().countContentWithTag(name);
 			
 		}
 		
 		public TagInfo(Tag tag) {
 			
 			mTag = tag;
-			mNumUses = mSession.getDBHandler().countContentWithTag(mTag.getName());
-			
 		}
 		
 		public Tag getTag() {
+			
 			return mTag;
 		}
 		
 		public String getName() {
+			
 			return mTag.getName();
 		}
 		
 		public long getNumUses() {
-			return mNumUses;
+			
+			return mTag.getNumUses();
 		}
 		
 		@Override
 		public String toString() {
-			return mTag.getName() + ": " + mNumUses;
+			
+			return mTag.getName() + ": " + mTag.getNumUses();
 		}
 		
 	}

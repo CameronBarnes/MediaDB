@@ -1,7 +1,7 @@
 /*
  *     ContentBuilder
- *     Last Modified: 2021-06-18, 7:28 p.m.
- *     Copyright (C) 2021-06-18, 7:28 p.m.  CameronBarnes
+ *     Last Modified: 2021-08-02, 6:46 a.m.
+ *     Copyright (C) 2021-08-02, 6:46 a.m.  CameronBarnes
  *
  *     This program is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
@@ -29,12 +29,10 @@ public class ContentBuilder {
 	private final Content mContent;
 	
 	public ContentBuilder(ContentType type) {
-		
 		mContent = new Content(type);
 	}
 	
 	public ContentBuilder hash(String hash) {
-		
 		mContent.setHash(hash);
 		return this;
 	}
@@ -131,9 +129,16 @@ public class ContentBuilder {
 		return this;
 	}
 	
+	public ContentBuilder pools(int[] pools) {
+		
+		mContent.setPools(pools);
+		return this;
+	}
+	
 	public Content build() throws Content.ContentValidationException {
 		
 		if (mContent.getTags() == null) mContent.setTags(new String[]{});
+		if (mContent.getPools() == null) mContent.setPools(new int[]{});
 		mContent.validate();
 		return mContent;
 	}

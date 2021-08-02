@@ -1,7 +1,7 @@
 /*
  *     Main
- *     Last Modified: 2021-06-18, 7:24 p.m.
- *     Copyright (C) 2021-06-18, 7:28 p.m.  CameronBarnes
+ *     Last Modified: 2021-08-02, 5:57 a.m.
+ *     Copyright (C) 2021-08-02, 6:46 a.m.  CameronBarnes
  *
  *     This program is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
@@ -21,6 +21,7 @@ package ca.bigcattech.MediaDB.core;
 
 import ca.bigcattech.MediaDB.IO.FileSystemHandler;
 import ca.bigcattech.MediaDB.db.DBHandler;
+import ca.bigcattech.MediaDB.db.MongoDBHandler;
 import ca.bigcattech.MediaDB.gui.frames.MainFrame;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,7 +36,7 @@ public class Main {
 		
 		FileSystemHandler.init();
 		
-		DBHandler dbHandler = new DBHandler("media_db", "127.0.0.1");
+		DBHandler dbHandler = new MongoDBHandler("media_db", "127.0.0.1");
 		dbHandler.initDB();
 		
 		Ingest ingest = new Ingest(dbHandler);

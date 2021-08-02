@@ -1,7 +1,7 @@
 /*
  *     Content
- *     Last Modified: 2021-07-16, 8:13 p.m.
- *     Copyright (C) 2021-07-16, 9:57 p.m.  CameronBarnes
+ *     Last Modified: 2021-08-02, 6:46 a.m.
+ *     Copyright (C) 2021-08-02, 6:46 a.m.  CameronBarnes
  *
  *     This program is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
@@ -23,13 +23,15 @@ import ca.bigcattech.MediaDB.IO.FileSystemHandler;
 import ca.bigcattech.MediaDB.core.Ingest;
 import ca.bigcattech.MediaDB.core.Options;
 import ca.bigcattech.MediaDB.db.DBHandler;
-import ca.bigcattech.MediaDB.db.Tag;
+import ca.bigcattech.MediaDB.db.pool.Pool;
+import ca.bigcattech.MediaDB.db.tag.Tag;
 import ca.bigcattech.MediaDB.image.SimilarityFinder;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class Content {
 	
@@ -53,6 +55,8 @@ public class Content {
 	
 	private boolean mFavorite = false;
 	
+	private int[] mPools;
+	
 	Content(ContentType type) {
 		
 		mType = type;
@@ -61,6 +65,31 @@ public class Content {
 	public static ContentBuilder builder(ContentType type) {
 		
 		return new ContentBuilder(type);
+	}
+	
+	public void setPools(int[] pools) {
+		
+		mPools = pools;
+	}
+	
+	public int[] getPools() {
+		
+		return mPools;
+	}
+	
+	public void addPool(int pool) {
+		
+		ArrayList<Integer> pools = Arrays.stream(mPools).boxed().collect(Collectors.toCollection(ArrayList::new));
+		if (!pools.contains(pool)) pools.add(pool);
+		mPools = pools.stream().mapToInt(Integer::intValue).toArray();
+		
+	}
+	
+	public void addPool(Pool pool) {
+		
+		addPool(pool.getUID());
+		pool.addContentHash(mHash);
+		
 	}
 	
 	public File getFile() {
@@ -145,32 +174,33 @@ public class Content {
 	}
 	
 	public void setTags(String[] tags) {
-		
 		mTags = tags;
 	}
 	
-	public void addTags(String[] tags) {
+	public void addTags(String[] tags, DBHandler dbHandler) {
 		
 		List<String> list = new ArrayList<>(Arrays.asList(mTags));
 		for (String tag : tags) {
 			if (tag.equals("") || list.contains(tag)) continue;
 			list.add(tag);
+			dbHandler.incrementTagUses(new String[]{tag});
 		}
 		mTags = list.toArray(new String[0]);
 		
 	}
 	
-	public void removeTag(String tag) {
+	public void removeTag(String tag, DBHandler dbHandler) {
 		
-		removeTag(new String[]{tag});
+		removeTag(new String[]{tag}, dbHandler);
 	}
 	
-	public void removeTag(String[] tags) {
+	public void removeTag(String[] tags, DBHandler dbHandler) {
 		
 		List<String> list = new ArrayList<>(Arrays.asList(mTags));
 		for (String tag : tags) {
 			if (tag.equals("")) continue;
 			list.remove(tag);
+			dbHandler.decrementTagUses(new String[]{tag});
 		}
 		mTags = list.toArray(new String[0]);
 		
@@ -260,19 +290,10 @@ public class Content {
 		
 		//Update tags
 		addParentTag(dbHandler, mTags);
-		
 		removeInvalidTags();
 		
-		//If manually set to private, it's restricted
-		if (mIsPrivate) {
-			mIsRestricted = true;
-			return;
-		}
-		
-		if (dbHandler.isTagRestricted(mTags)) {
-			mIsRestricted = true;
-			//If I add anything after here I need to add a return
-		}
+		//If manually set to private, it's restricted, otherwise, if any of the tags are restricted, it's restricted
+		mIsRestricted = mIsPrivate || dbHandler.isTagRestricted(mTags);
 		
 	}
 	
@@ -291,7 +312,7 @@ public class Content {
 			Tag tag = dbHandler.getTagFromName(name);
 			if (tag == null) continue;
 			
-			addTags(tag.getParentTags());
+			addTags(tag.getParentTags(), dbHandler);
 			addParentTag(dbHandler, tag.getParentTags());
 			
 		}
