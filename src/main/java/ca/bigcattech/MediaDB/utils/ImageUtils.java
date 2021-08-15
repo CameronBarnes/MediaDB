@@ -1,7 +1,7 @@
 /*
  *     ImageUtils
- *     Last Modified: 2021-06-18, 7:28 p.m.
- *     Copyright (C) 2021-06-18, 7:28 p.m.  CameronBarnes
+ *     Last Modified: 2021-08-03, 3:39 p.m.
+ *     Copyright (C) 2021-08-14, 5:57 p.m.  CameronBarnes
  *
  *     This program is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
@@ -20,6 +20,7 @@
 package ca.bigcattech.MediaDB.utils;
 
 import ca.bigcattech.MediaDB.IO.FileSystemHandler;
+import ca.bigcattech.MediaDB.image.ImageSignature;
 import ca.bigcattech.MediaDB.image.SimilarityFinder;
 import net.coobird.thumbnailator.Thumbnails;
 import net.coobird.thumbnailator.name.Rename;
@@ -294,7 +295,7 @@ public class ImageUtils {
 		
 	}
 	
-	public static SimilarityFinder.ImageSignature calcImageSignature(File image) throws IOException {
+	public static ImageSignature calcImageSignature(File image) throws IOException {
 		
 		ImageData imageData = loadImage(image);
 		return SimilarityFinder.calcSignature(imageData.getBufferedImage());

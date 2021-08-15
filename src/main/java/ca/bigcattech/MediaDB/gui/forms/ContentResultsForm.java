@@ -1,7 +1,7 @@
 /*
  *     ContentResultsForm
- *     Last Modified: 2021-08-02, 6:46 a.m.
- *     Copyright (C) 2021-08-02, 6:46 a.m.  CameronBarnes
+ *     Last Modified: 2021-08-02, 8:11 a.m.
+ *     Copyright (C) 2021-08-14, 5:57 p.m.  CameronBarnes
  *
  *     This program is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
@@ -242,8 +242,8 @@ public class ContentResultsForm implements IKeyListener {
 	private void clearIcons() {
 		
 		Arrays.stream(mContentResultPannel.getComponents())
-			  .filter(component -> component instanceof ContentButton)
-			  .map(component -> (ContentButton) component)
+			  .filter(ContentButton.class::isInstance)
+			  .map(ContentButton.class::cast)
 			  .forEach(ContentButton::clearIcon);
 		
 	}

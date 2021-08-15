@@ -1,7 +1,7 @@
 /*
  *     MongoDBHandler
- *     Last Modified: 2021-08-02, 6:46 a.m.
- *     Copyright (C) 2021-08-02, 6:46 a.m.  CameronBarnes
+ *     Last Modified: 2021-08-14, 5:57 p.m.
+ *     Copyright (C) 2021-08-14, 5:57 p.m.  CameronBarnes
  *
  *     This program is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
@@ -24,7 +24,7 @@ import ca.bigcattech.MediaDB.db.content.Content;
 import ca.bigcattech.MediaDB.db.content.ContentType;
 import ca.bigcattech.MediaDB.db.pool.Pool;
 import ca.bigcattech.MediaDB.db.tag.Tag;
-import ca.bigcattech.MediaDB.image.SimilarityFinder;
+import ca.bigcattech.MediaDB.image.ImageSignature;
 import com.mongodb.MongoClientSettings;
 import com.mongodb.ServerAddress;
 import com.mongodb.client.MongoClient;
@@ -42,9 +42,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.ConcurrentMap;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -53,6 +51,7 @@ public class MongoDBHandler implements DBHandler {
 	private static final String COLLECTION_CONTENT = "content";
 	private static final String COLLECTION_TAGS = "tags";
 	private static final String COLLECTION_POOLS = "pools";
+	private static final String COLLECTION_SIGNATURES = "signature";
 	
 	private static final String KEY_CONTENT_HASH = "content_hash";
 	private static final String KEY_CONTENT_FILE = "content_file";
@@ -85,21 +84,22 @@ public class MongoDBHandler implements DBHandler {
 	private static final String KEY_POOLS_THUMBNAIL_FILE = "pools_thumbnail_file";
 	private static final String KEY_POOLS_FAVORITE = "pools_favorite";
 	
+	private static final String KEY_SIGNATURE_CONTENT_HASH = "signature_content_hash";
+	
 	private static final Logger log = LoggerFactory.getLogger(MongoDBHandler.class);
 	
-	private final MongoClient mMongoClient;
 	private final MongoDatabase mDatabase;
 	
 	public MongoDBHandler(String database, String address) {
 		
 		log.info("Starting DBHandler");
 		
-		mMongoClient = MongoClients.create(
+		MongoClient mongoClient = MongoClients.create(
 				MongoClientSettings.builder()
 								   .applyToClusterSettings(builder -> builder.hosts(Arrays.asList(new ServerAddress(address))))
 								   .build());
 		
-		mDatabase = mMongoClient.getDatabase(database);
+		mDatabase = mongoClient.getDatabase(database);
 		
 		log.info("Done!");
 		
@@ -151,6 +151,7 @@ public class MongoDBHandler implements DBHandler {
 				document.replace(KEY_CONTENT_SIGNATURE, createImageSignatureDocument(content.getSignature()));
 			else document.put(KEY_CONTENT_SIGNATURE, createImageSignatureDocument(content.getSignature()));
 		}
+		else document.remove(KEY_CONTENT_SIGNATURE);
 		
 		return document;
 		
@@ -192,7 +193,7 @@ public class MongoDBHandler implements DBHandler {
 						  .title(document.getString(KEY_CONTENT_TITLE))
 						  .description(document.getString(KEY_CONTENT_DESCRIPTION))
 						  .views(document.getInteger(KEY_CONTENT_VIEWS))
-						  .signature(loadImageSignatureFromDocument(document))
+						  .signature(loadImageSignatureFromContentDocument(document))
 						  .videoLength(document.getLong(KEY_CONTENT_VIDEO_LENGTH))
 						  .timeSpent(document.getLong(KEY_CONTENT_TIME_SPENT))
 						  .pools(Arrays.stream(document.getList(KEY_CONTENT_POOLS, String.class).toArray(new String[]{})).mapToInt(Integer::valueOf).toArray())
@@ -207,7 +208,7 @@ public class MongoDBHandler implements DBHandler {
 		
 	}
 	
-	private static Document createImageSignatureDocument(SimilarityFinder.ImageSignature signature) {
+	private static Document createImageSignatureDocument(ImageSignature signature) {
 		
 		Document document = new Document();
 		
@@ -218,11 +219,32 @@ public class MongoDBHandler implements DBHandler {
 		document.put("3", data.get(3));
 		document.put("4", data.get(4));
 		
+		if (signature.getHash() != null && !signature.getHash().isEmpty()) {
+			document.put(KEY_SIGNATURE_CONTENT_HASH, signature.getHash());
+		}
+		
 		return document;
 		
 	}
 	
-	private static SimilarityFinder.ImageSignature loadImageSignatureFromDocument(Document document) {
+	private static ImageSignature loadImageSignatureFromDocument(Document document) {
+		
+		if (document == null) return null;
+		
+		List<List<String>> data = new ArrayList<>();
+		
+		data.add(document.getList("0", String.class));
+		data.add(document.getList("1", String.class));
+		data.add(document.getList("2", String.class));
+		data.add(document.getList("3", String.class));
+		data.add(document.getList("4", String.class));
+		
+		return new ImageSignature(document.getString(KEY_SIGNATURE_CONTENT_HASH), data);
+		
+	}
+	
+	@Deprecated
+	private static ImageSignature loadImageSignatureFromContentDocument(Document document) {
 		
 		if (!document.containsKey(KEY_CONTENT_SIGNATURE)) return null;
 		
@@ -236,7 +258,7 @@ public class MongoDBHandler implements DBHandler {
 		data.add(signatureDoc.getList("3", String.class));
 		data.add(signatureDoc.getList("4", String.class));
 		
-		return new SimilarityFinder.ImageSignature(data);
+		return new ImageSignature(document.getString(KEY_CONTENT_HASH), data);
 		
 	}
 	
@@ -276,13 +298,60 @@ public class MongoDBHandler implements DBHandler {
 	@Override
 	public void initDB() {
 		
-		log.info("Init DBHandler");
+		log.info("Init MongoDBHandler");
+		log.info("Using MongoDBHandler");
 		
 		createCollections();
 		createIndexes();
 		
-		log.info("DBHandler init finished");
+		migrate();
 		
+		log.info("MongoDBHandler init finished");
+		
+	}
+	
+	@Override
+	public void migrate() {
+		
+		log.info("Migrating data if needed");
+		long start = System.currentTimeMillis();
+		
+		migrateSignatures();
+		
+		log.info("Migrating took " + (System.currentTimeMillis() - start) + "ms");
+		
+	}
+	
+	private void migrateSignatures() {
+		
+		List<Document> documents = new ArrayList<>();
+		MongoCollection<Document> collection = mDatabase.getCollection(COLLECTION_CONTENT);
+		collection.find(Filters.exists(KEY_CONTENT_SIGNATURE, true)).into(documents);
+		
+		if (!documents.isEmpty()) {
+			ConcurrentLinkedQueue<Content> content = new ConcurrentLinkedQueue<>();
+			documents.stream().parallel().filter(Objects::nonNull).forEach(document -> content.add(loadContentFromDocument(document)));
+			log.info(content.size() + " ImageSignatures to migrate");
+			
+			content.stream().parallel().forEach(c -> {
+				ImageSignature signature = c.getSignature();
+				if (signature.getHash() == null || signature.getHash().isEmpty()) signature.setHash(c.getHash());
+				exportSignature(signature);
+				c.setSignature(null);
+				try {
+					exportContent(c);
+				}
+				catch (Content.ContentValidationException e) {
+					e.printStackTrace();
+				}
+			});
+		}
+		
+	}
+	
+	private void clearSignatureFromContent(String hash) {
+	
+	
 	}
 	
 	private void createCollections() {
@@ -307,6 +376,11 @@ public class MongoDBHandler implements DBHandler {
 		if (!collections.contains(COLLECTION_POOLS)) {
 			log.info("Creating pools collection");
 			mDatabase.createCollection(COLLECTION_POOLS);
+			created = true;
+		}
+		if (!collections.contains(COLLECTION_SIGNATURES)) {
+			log.info("Creating Signature collection");
+			mDatabase.createCollection(COLLECTION_SIGNATURES);
 			created = true;
 		}
 		
@@ -340,6 +414,11 @@ public class MongoDBHandler implements DBHandler {
 		MongoCollection<Document> pools = mDatabase.getCollection(COLLECTION_POOLS);
 		pools.createIndex(Indexes.ascending(KEY_POOLS_UID), new IndexOptions().unique(true));
 		pools.createIndex(Indexes.text(KEY_POOLS_ALL_TAGS));
+		
+		//Indexes for the signatures collection
+		
+		MongoCollection<Document> signatures = mDatabase.getCollection(COLLECTION_SIGNATURES);
+		signatures.createIndex(Indexes.ascending(KEY_SIGNATURE_CONTENT_HASH), new IndexOptions().unique(true));
 		
 	}
 	
@@ -573,19 +652,52 @@ public class MongoDBHandler implements DBHandler {
 	}
 	
 	@Override
-	public Set<Map.Entry<String, SimilarityFinder.ImageSignature>> getAllSignatures() {
+	public List<ImageSignature> getAllSignatures() {
 		
-		ConcurrentMap<String, SimilarityFinder.ImageSignature> signatures;
+		ConcurrentLinkedQueue<ImageSignature> signatures;
 		
-		MongoCollection<Document> collection = mDatabase.getCollection(COLLECTION_CONTENT);
+		MongoCollection<Document> collection = mDatabase.getCollection(COLLECTION_SIGNATURES);
 		List<Document> documents = new ArrayList<>();
-		collection.find(Filters.exists(KEY_CONTENT_SIGNATURE, true)).into(documents);
+		collection.find().into(documents);
 		
-		signatures = new ConcurrentHashMap<>(documents.size());
+		signatures = new ConcurrentLinkedQueue<>();
 		
-		documents.stream().parallel().forEach(document -> signatures.put(document.getString(KEY_CONTENT_HASH), loadImageSignatureFromDocument(document)));
+		documents.stream().parallel().forEach(document -> signatures.add(loadImageSignatureFromDocument(document)));
 		
-		return signatures.entrySet();
+		return new ArrayList<>(signatures);
+		
+	}
+	
+	@Override
+	public void exportSignature(ImageSignature signature) {
+		
+		MongoCollection<Document> collection = mDatabase.getCollection(COLLECTION_SIGNATURES);
+		Document document = collection.find(Filters.eq(KEY_SIGNATURE_CONTENT_HASH, signature.getHash())).first();
+		
+		if (document != null) {
+			collection.replaceOne(Filters.eq(KEY_SIGNATURE_CONTENT_HASH, signature.getHash()), createImageSignatureDocument(signature));
+		}
+		else {
+			collection.insertOne(createImageSignatureDocument(signature));
+		}
+		
+	}
+	
+	@Override
+	public ImageSignature getSignatureFromHash(String hash) {
+		
+		MongoCollection<Document> collection = mDatabase.getCollection(COLLECTION_SIGNATURES);
+		Document document = collection.find(Filters.eq(KEY_SIGNATURE_CONTENT_HASH, hash)).first();
+		
+		return loadImageSignatureFromDocument(document);
+		
+	}
+	
+	@Override
+	public boolean checkSignatureExists(String hash) {
+		
+		MongoCollection<Document> collection = mDatabase.getCollection(COLLECTION_SIGNATURES);
+		return collection.countDocuments(Filters.eq(KEY_SIGNATURE_CONTENT_HASH, hash)) > 0;
 		
 	}
 	

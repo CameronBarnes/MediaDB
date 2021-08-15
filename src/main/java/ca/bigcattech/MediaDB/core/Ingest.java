@@ -1,7 +1,7 @@
 /*
  *     Ingest
- *     Last Modified: 2021-07-24, 2:16 a.m.
- *     Copyright (C) 2021-08-02, 6:46 a.m.  CameronBarnes
+ *     Last Modified: 2021-08-03, 4:07 p.m.
+ *     Copyright (C) 2021-08-14, 5:57 p.m.  CameronBarnes
  *
  *     This program is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
@@ -23,6 +23,7 @@ import ca.bigcattech.MediaDB.IO.FileSystemHandler;
 import ca.bigcattech.MediaDB.db.DBHandler;
 import ca.bigcattech.MediaDB.db.content.Content;
 import ca.bigcattech.MediaDB.db.content.ContentType;
+import ca.bigcattech.MediaDB.image.ImageSignature;
 import ca.bigcattech.MediaDB.image.SimilarityFinder;
 import ca.bigcattech.MediaDB.image.ThumbnailHandler;
 import ca.bigcattech.MediaDB.utils.ImageUtils;
@@ -258,7 +259,7 @@ public class Ingest {
 		private String mTitle = "";
 		private String mDescription = "";
 		private boolean isPrivate = false;
-		private SimilarityFinder.ImageSignature mSignature;
+		private ImageSignature mSignature;
 		private long mVideoLength = 0L;
 		private IngestResult mResult = null;
 		
@@ -483,6 +484,7 @@ public class Ingest {
 		private boolean handleImageSimilarity(File thumbnail) throws IOException {
 			
 			mSignature = ImageUtils.calcImageSignature(thumbnail);
+			mSignature.setHash(mHash);
 			long start = System.currentTimeMillis();
 			List<Map.Entry<String, Double>> results = mSimilarityFinder.checkSimilarity(mSignature);
 			log.info("Similarity check took: " + (System.currentTimeMillis() - start) + "ms to check similarity");
@@ -499,7 +501,7 @@ public class Ingest {
 			
 			//TODO actually do stuff here, we need some kind of user approval process
 			//TODO not sure if we want to shove these in the trash while we're waiting for that or create some kind of temporary storage
-			//Probably the latter ^^^^^^^^^^
+			//Probably the latter ^^^^^^^^^^ but currently the former
 			//TODO referring to the TODO above probably do this back in the process function rather than in here, we're sending out the effective result in the mResult var
 			return false; //TODO not sure if I actually want to do this, but I'm going to say probably
 			

@@ -1,7 +1,7 @@
 /*
  *     Content
- *     Last Modified: 2021-08-02, 6:46 a.m.
- *     Copyright (C) 2021-08-02, 6:46 a.m.  CameronBarnes
+ *     Last Modified: 2021-08-14, 5:56 p.m.
+ *     Copyright (C) 2021-08-14, 5:57 p.m.  CameronBarnes
  *
  *     This program is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
@@ -25,7 +25,7 @@ import ca.bigcattech.MediaDB.core.Options;
 import ca.bigcattech.MediaDB.db.DBHandler;
 import ca.bigcattech.MediaDB.db.pool.Pool;
 import ca.bigcattech.MediaDB.db.tag.Tag;
-import ca.bigcattech.MediaDB.image.SimilarityFinder;
+import ca.bigcattech.MediaDB.image.ImageSignature;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -40,7 +40,7 @@ public class Content {
 	private String mHash = null;
 	private File mFile;
 	private String[] mTags;
-	private SimilarityFinder.ImageSignature mSignature = null;
+	private ImageSignature mSignature = null;
 	
 	private long mVideoLength = 0;
 	
@@ -117,12 +117,12 @@ public class Content {
 		return mType;
 	}
 	
-	public SimilarityFinder.ImageSignature getSignature() {
+	public ImageSignature getSignature() {
 		
 		return mSignature;
 	}
 	
-	public void setSignature(SimilarityFinder.ImageSignature signature) {
+	public void setSignature(ImageSignature signature) {
 		
 		mSignature = signature;
 	}

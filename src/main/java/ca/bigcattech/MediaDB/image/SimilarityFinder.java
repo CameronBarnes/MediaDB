@@ -1,7 +1,7 @@
 /*
  *     SimilarityFinder
- *     Last Modified: 2021-08-02, 6:46 a.m.
- *     Copyright (C) 2021-08-02, 6:46 a.m.  CameronBarnes
+ *     Last Modified: 2021-08-14, 5:56 p.m.
+ *     Copyright (C) 2021-08-14, 5:57 p.m.  CameronBarnes
  *
  *     This program is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
@@ -28,10 +28,9 @@ import java.awt.image.DataBuffer;
 import java.awt.image.RenderedImage;
 import java.io.File;
 import java.io.IOException;
-import java.io.Serializable;
-import java.security.InvalidParameterException;
 import java.util.List;
-import java.util.*;
+import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
 /*
@@ -95,7 +94,7 @@ public class SimilarityFinder {
 			for (double x = px * image.getWidth() - sampleSize; x < px * image.getWidth() + sampleSize; x++) {
 				for (double y = py * image.getHeight() - sampleSize; y < py * image.getHeight() + sampleSize; y++) {
 					
-					image.getSampleModel().getPixel((int) x, (int) y, pixel, imgData);
+					image.getSampleModel().getPixel((int) Math.min(x, image.getWidth()), (int) Math.min(y, image.getHeight()), pixel, imgData);
 					accum[0] += pixel[0];
 					accum[1] += pixel[1];
 					accum[2] += pixel[2];
@@ -108,9 +107,11 @@ public class SimilarityFinder {
 			e.printStackTrace();
 		}
 		
-		accum[0] /= numPixels;
-		accum[1] /= numPixels;
-		accum[2] /= numPixels;
+		if (numPixels != 0) {
+			accum[0] /= numPixels;
+			accum[1] /= numPixels;
+			accum[2] /= numPixels;
+		}
 		
 		return new Color((int) accum[0], (int) accum[1], (int) accum[2]);
 		
@@ -124,70 +125,14 @@ public class SimilarityFinder {
 		
 		ConcurrentHashMap<String, Double> results = new ConcurrentHashMap<>();
 		
-		Set<Map.Entry<String, ImageSignature>> signatures = mDBHandler.getAllSignatures();
+		List<ImageSignature> signatures = mDBHandler.getAllSignatures();
 		
-		signatures.stream().parallel().filter(Objects::nonNull).forEach(entry -> {
-			double result = calcDistance(signature, entry.getValue());
-			if (result <= 1000) results.put(entry.getKey(), result);
+		signatures.stream().parallel().filter(Objects::nonNull).forEach(sig -> {
+			double result = calcDistance(signature, sig);
+			if (result <= 1000) results.put(sig.getHash(), result);
 		});
 		
 		return Utils.sortByValue(results);
-		
-	}
-	
-	public static class ImageSignature implements Serializable {
-		
-		private final Color[][] mSignature;
-		
-		public ImageSignature(Color[][] signature) {
-			
-			mSignature = signature;
-			if (signature[0].length != 5 || signature[1].length != 5 || signature[2].length != 5 || signature[3].length != 5 || signature[4].length != 5)
-				throw new InvalidParameterException("Signature must contain 25 color elements");
-			
-		}
-		
-		public ImageSignature(List<List<String>> signature) {
-			
-			mSignature = new Color[5][5];
-			
-			for (int x = 0; x < 5; x++) {
-				List<String> data = signature.get(x);
-				for (int y = 0; y < 5; y++) {
-					mSignature[x][y] = ImageUtils.hex2Rgb(data.get(y));
-				}
-			}
-			
-		}
-		
-		public Color[][] getSignature() {
-			
-			return mSignature;
-		}
-		
-		/**
-		 * This converts from a 2D array of Color objects to a 2D List of colour hex String's
-		 *
-		 * @return Signature in List<List<String>> format, with the String being the Color in hex format
-		 */
-		public List<List<String>> convertDataStructure() {
-			
-			List<List<String>> output = new ArrayList<>();
-			
-			for (Color[] subArr : mSignature) {
-				
-				List<String> subOut = new ArrayList<>();
-				output.add(subOut);
-				
-				for (Color color : subArr) {
-					subOut.add(ImageUtils.colorToHex(color));
-				}
-				
-			}
-			
-			return output;
-			
-		}
 		
 	}
 	

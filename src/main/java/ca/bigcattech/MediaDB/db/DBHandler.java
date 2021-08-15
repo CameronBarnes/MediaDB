@@ -1,7 +1,7 @@
 /*
  *     DBHandler
- *     Last Modified: 2021-08-02, 5:57 a.m.
- *     Copyright (C) 2021-08-02, 6:46 a.m.  CameronBarnes
+ *     Last Modified: 2021-08-04, 2:26 p.m.
+ *     Copyright (C) 2021-08-14, 5:57 p.m.  CameronBarnes
  *
  *     This program is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
@@ -23,17 +23,17 @@ import ca.bigcattech.MediaDB.core.Options;
 import ca.bigcattech.MediaDB.db.content.Content;
 import ca.bigcattech.MediaDB.db.pool.Pool;
 import ca.bigcattech.MediaDB.db.tag.Tag;
-import ca.bigcattech.MediaDB.image.SimilarityFinder;
+import ca.bigcattech.MediaDB.image.ImageSignature;
 
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 public interface DBHandler {
 	
 	boolean poolExists(int uid);
 	
 	void initDB();
+	
+	void migrate();
 	
 	/**
 	 * Check if a hash value already exists in the database's content collection
@@ -63,7 +63,13 @@ public interface DBHandler {
 	
 	Content[] searchForContentByTags(Options.SearchOptions searchOptions, String[] tags);
 	
-	Set<Map.Entry<String, SimilarityFinder.ImageSignature>> getAllSignatures();
+	List<ImageSignature> getAllSignatures();
+	
+	void exportSignature(ImageSignature signature);
+	
+	ImageSignature getSignatureFromHash(String hash);
+	
+	boolean checkSignatureExists(String hash);
 	
 	void updateAllContentWithTags(String[] tags);
 	

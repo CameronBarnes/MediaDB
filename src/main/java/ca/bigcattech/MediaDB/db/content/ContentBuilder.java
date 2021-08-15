@@ -1,7 +1,7 @@
 /*
  *     ContentBuilder
- *     Last Modified: 2021-08-02, 6:46 a.m.
- *     Copyright (C) 2021-08-02, 6:46 a.m.  CameronBarnes
+ *     Last Modified: 2021-08-03, 3:39 p.m.
+ *     Copyright (C) 2021-08-14, 5:57 p.m.  CameronBarnes
  *
  *     This program is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
 
 package ca.bigcattech.MediaDB.db.content;
 
-import ca.bigcattech.MediaDB.image.SimilarityFinder;
+import ca.bigcattech.MediaDB.image.ImageSignature;
 
 import java.io.File;
 import java.util.Arrays;
@@ -37,7 +37,7 @@ public class ContentBuilder {
 		return this;
 	}
 	
-	public ContentBuilder signature(SimilarityFinder.ImageSignature signature) {
+	public ContentBuilder signature(ImageSignature signature) {
 		
 		mContent.setSignature(signature);
 		return this;

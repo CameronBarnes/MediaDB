@@ -1,7 +1,7 @@
 /*
  *     Tag
- *     Last Modified: 2021-08-02, 6:46 a.m.
- *     Copyright (C) 2021-08-02, 6:46 a.m.  CameronBarnes
+ *     Last Modified: 2021-08-02, 10:34 a.m.
+ *     Copyright (C) 2021-08-14, 5:57 p.m.  CameronBarnes
  *
  *     This program is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
@@ -82,12 +82,10 @@ public class Tag {
 	}
 	
 	public void decrementUses() {
-		
 		mUses--;
 	}
 	
 	public void incrementUses() {
-		
 		mUses++;
 	}
 	
