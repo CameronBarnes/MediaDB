@@ -1,7 +1,7 @@
 /*
  *     DisplayContentForm
- *     Last Modified: 2021-08-01, 11:22 a.m.
- *     Copyright (C) 2021-08-02, 6:46 a.m.  CameronBarnes
+ *     Last Modified: 2021-08-27, 4:23 p.m.
+ *     Copyright (C) 2021-08-27, 4:23 p.m.  CameronBarnes
  *
  *     This program is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
@@ -81,7 +81,7 @@ public class DisplayContentForm implements IKeyListener {
 	private JButton mDelete;
 	private JButton mCopy;
 	private JLabel mTimeSpent;
-	private JComboBox<String> mPoolBox;
+	private JComboBox<PoolInfo> mPoolBox;
 	private JButton mAddToPool;
 	private JButton mPoolView;
 	private JTextField mTitleField;
@@ -96,6 +96,8 @@ public class DisplayContentForm implements IKeyListener {
 	
 	private long mStartTime = 0L;
 	
+	private JFrame mPoolFrame = null;
+	
 	public DisplayContentForm(Content content, Session session) {
 		
 		mContent = content;
@@ -103,19 +105,20 @@ public class DisplayContentForm implements IKeyListener {
 		$$$setupUI$$$();
 		
 		if (!session.isContentFromPool()) {
-			mPoolBox.addItem("Results");
+			mPoolBox.addItem(new PoolInfo(null));
 			mPoolView.setEnabled(false);
 		}
 		
-		String currPoolName = session.getPool() == null ? null : session.getPool().getTitle();
+		Pool currPool = session.getPool() == null ? null : session.getPool();
 		
 		for (Pool pool : session.getDBHandler().getPoolFromUID(content.getPools())) {
-			if (currPoolName != null && pool.getTitle().equals(currPoolName)) {
-				mPoolBox.addItem(currPoolName);
-				mPoolBox.setSelectedItem(currPoolName);
+			if (currPool != null && pool.getUID() == currPool.getUID()) {
+				PoolInfo poolInfo = new PoolInfo(pool);
+				mPoolBox.addItem(poolInfo);
+				mPoolBox.setSelectedItem(poolInfo);
 				mPoolView.setEnabled(true);
 			}
-			else mPoolBox.addItem(pool.getTitle());
+			else if (pool != null) mPoolBox.addItem(new PoolInfo(pool));
 		}
 		
 		addTag(content.getTags());
@@ -137,7 +140,6 @@ public class DisplayContentForm implements IKeyListener {
 			mMediaPlayerComponent.mediaPlayer().events().addMediaPlayerEventListener(new MediaPlayerEventAdapter() {
 				@Override
 				public void error(MediaPlayer mediaPlayer) {
-					
 					release();
 				}
 			});
@@ -393,6 +395,24 @@ public class DisplayContentForm implements IKeyListener {
 			Toolkit.getDefaultToolkit().getSystemClipboard().setContents(transferable, null);
 		});
 		
+		mPoolView.addActionListener(e -> {
+			
+			if (mPoolBox.getSelectedItem() != null) {
+				
+				PoolInfo poolInfo = (PoolInfo) mPoolBox.getSelectedItem();
+				
+				if (poolInfo.mPool == null) return;
+				
+				if (mPoolFrame != null) {
+					mPoolFrame.dispose();
+					mPoolFrame = null;
+				}
+				
+				//TODO display the pool, we should do this through session
+				
+			}
+			
+		});
 	}
 	
 	public void playContent() {
@@ -643,6 +663,25 @@ public class DisplayContentForm implements IKeyListener {
 		else if (e.getKeyCode() == KeyEvent.VK_RIGHT) next(false);
 		else if (e.getKeyCode() == KeyEvent.VK_LEFT) previous(false);
 		else if (control && e.getKeyCode() == KeyEvent.VK_BACK_SPACE) mButtonBack.doClick();
+		
+	}
+	
+	private static class PoolInfo {
+		
+		private static final String POOL_BOX_EMPTY_TEXT = "Results";
+		private final Pool mPool;
+		
+		PoolInfo(Pool pool) {
+			
+			mPool = pool;
+		}
+		
+		@Override
+		public String toString() {
+			
+			if (mPool == null) return POOL_BOX_EMPTY_TEXT;
+			return mPool.getTitle();
+		}
 		
 	}
 	

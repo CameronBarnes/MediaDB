@@ -1,7 +1,7 @@
 /*
  *     FileSystemHandler
- *     Last Modified: 2021-07-24, 2:13 a.m.
- *     Copyright (C) 2021-08-02, 6:46 a.m.  CameronBarnes
+ *     Last Modified: 2021-08-19, 9:34 p.m.
+ *     Copyright (C) 2021-08-27, 4:23 p.m.  CameronBarnes
  *
  *     This program is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
@@ -300,7 +300,7 @@ public class FileSystemHandler {
 	
 	public static File subdirectory(File root, File subdirectory) {
 		
-		return new File(root.toString() + '\\' + subdirectory.toString());
+		return new File(root.toString() + '/' + subdirectory.toString());
 	}
 	
 	public static File createSubdirectory(File root, File subdirectory) {

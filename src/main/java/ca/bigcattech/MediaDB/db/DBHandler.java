@@ -1,7 +1,7 @@
 /*
  *     DBHandler
- *     Last Modified: 2021-08-04, 2:26 p.m.
- *     Copyright (C) 2021-08-14, 5:57 p.m.  CameronBarnes
+ *     Last Modified: 2021-08-19, 9:50 p.m.
+ *     Copyright (C) 2021-08-27, 4:23 p.m.  CameronBarnes
  *
  *     This program is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
@@ -35,6 +35,8 @@ public interface DBHandler {
 	
 	void migrate();
 	
+	void manualMigrate();
+	
 	/**
 	 * Check if a hash value already exists in the database's content collection
 	 *
@@ -54,6 +56,8 @@ public interface DBHandler {
 	Pool getPoolFromUID(int uid);
 	
 	void exportPool(Pool pool);
+	
+	List<String> getAllPoolNames();
 	
 	Content[] getContentFromHash(String[] hashes);
 	

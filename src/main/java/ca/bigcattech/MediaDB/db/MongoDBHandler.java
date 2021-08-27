@@ -1,7 +1,7 @@
 /*
  *     MongoDBHandler
- *     Last Modified: 2021-08-14, 5:57 p.m.
- *     Copyright (C) 2021-08-14, 5:57 p.m.  CameronBarnes
+ *     Last Modified: 2021-08-19, 10:03 p.m.
+ *     Copyright (C) 2021-08-27, 4:23 p.m.  CameronBarnes
  *
  *     This program is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
@@ -322,6 +322,30 @@ public class MongoDBHandler implements DBHandler {
 		
 	}
 	
+	@Override
+	public void manualMigrate() {
+		
+		migrateFileSeparators();
+		
+	}
+	
+	private void migrateFileSeparators() {
+		
+		List<Document> documents = new ArrayList<>();
+		MongoCollection<Document> collection = mDatabase.getCollection(COLLECTION_CONTENT);
+		collection.find().into(documents);
+		
+		if (!documents.isEmpty()) {
+			
+			documents.stream().parallel().forEach(document -> {
+				document.replace(KEY_CONTENT_FILE, document.getString(KEY_CONTENT_FILE).replace("\\", "/"));
+				collection.replaceOne(Filters.eq(KEY_CONTENT_HASH, document.getString(KEY_CONTENT_HASH)), document);
+			});
+			
+		}
+		
+	}
+	
 	private void migrateSignatures() {
 		
 		List<Document> documents = new ArrayList<>();
@@ -347,11 +371,6 @@ public class MongoDBHandler implements DBHandler {
 			});
 		}
 		
-	}
-	
-	private void clearSignatureFromContent(String hash) {
-	
-	
 	}
 	
 	private void createCollections() {
@@ -512,6 +531,20 @@ public class MongoDBHandler implements DBHandler {
 		else {
 			collection.replaceOne(Filters.eq(KEY_POOLS_UID, pool.getUID()), updateAndValidateDocFromPool(document, pool));
 		}
+		
+	}
+	
+	@Override
+	public List<String> getAllPoolNames() {
+		
+		List<Document> documents = new ArrayList<>();
+		MongoCollection<Document> collection = mDatabase.getCollection(COLLECTION_POOLS);
+		collection.find().into(documents);
+		
+		ConcurrentLinkedQueue<String> names = new ConcurrentLinkedQueue<>();
+		documents.stream().parallel().filter(Objects::nonNull).map(MongoDBHandler::loadPoolFromDocument).forEach(pool -> names.add(pool.getTitle()));
+		
+		return new ArrayList<>(names);
 		
 	}
 	
@@ -819,18 +852,21 @@ public class MongoDBHandler implements DBHandler {
 		updateAllContent();
 		updateAllPools();
 		updateAllTags();
+		
 	}
 	
 	@Override
 	public void removeTagFromAllContent(String tag) {
 		
 		removeTagFromAllContent(new String[]{tag});
+		
 	}
 	
 	@Override
 	public void removeTagFromAll(String tag) {
 		
 		removeTagFromAll(new String[]{tag});
+		
 	}
 	
 	@Override
@@ -838,6 +874,7 @@ public class MongoDBHandler implements DBHandler {
 		
 		removeTagFromAllContent(tags);
 		updateAllPools();
+		
 	}
 	
 	@Override

@@ -1,7 +1,7 @@
 /*
  *     Ingest
- *     Last Modified: 2021-08-03, 4:07 p.m.
- *     Copyright (C) 2021-08-14, 5:57 p.m.  CameronBarnes
+ *     Last Modified: 2021-08-27, 4:23 p.m.
+ *     Copyright (C) 2021-08-27, 4:23 p.m.  CameronBarnes
  *
  *     This program is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
@@ -298,7 +298,7 @@ public class Ingest {
 			
 			//Move the file
 			//If destination file already exists, delete source file and set current file to file in ingest dir
-			File dest = new File(FileSystemHandler.INGEST_PROCESS_DIR.toString() + '\\' + mHash + '.' + mExtension);
+			File dest = new File(FileSystemHandler.INGEST_PROCESS_DIR.toString() + '/' + mHash + '.' + mExtension);
 			if (dest.exists()) {
 				Files.delete(mFile.toPath());
 				mFile = dest;
@@ -329,7 +329,7 @@ public class Ingest {
 				}
 				
 				//Move the content file to the content folder
-				Path destination = new File(FileSystemHandler.CONTENT_DIR.toString() + '\\' + mFile.getName()).toPath();
+				Path destination = new File(FileSystemHandler.CONTENT_DIR.toString() + '/' + mFile.getName()).toPath();
 				boolean moved = false;
 				int tried = 1;
 				while (tried <= 10 && !moved) {
@@ -361,8 +361,8 @@ public class Ingest {
 				}
 				else if (mType == ContentType.IMAGE) {
 					Files.move(
-							new File(FileSystemHandler.INGEST_PROCESS_DIR.toString() + '\\' + mHash + SUFFIX_THUMBNAIL + '.' + mExtension).toPath(),
-							new File(FileSystemHandler.CONTENT_THUMBNAIL_DIR.toString() + '\\' + mHash + SUFFIX_THUMBNAIL + '.' + mExtension).toPath());
+							new File(FileSystemHandler.INGEST_PROCESS_DIR.toString() + '/' + mHash + SUFFIX_THUMBNAIL + '.' + mExtension).toPath(),
+							new File(FileSystemHandler.CONTENT_THUMBNAIL_DIR.toString() + '/' + mHash + SUFFIX_THUMBNAIL + '.' + mExtension).toPath());
 				}
 				
 				//Package the file into a content object
@@ -393,9 +393,10 @@ public class Ingest {
 		private void cancel() throws IOException {
 			
 			//Delete the thumbnail
-			if (mType == ContentType.IMAGE) Files.delete(new File(FileSystemHandler.INGEST_PROCESS_DIR.toString() + '\\' + mHash + SUFFIX_THUMBNAIL + '.' + mExtension).toPath());
+			if (mType == ContentType.IMAGE)
+				Files.delete(new File(FileSystemHandler.INGEST_PROCESS_DIR.toString() + '/' + mHash + SUFFIX_THUMBNAIL + '.' + mExtension).toPath());
 			//Move the content back to the ingest folder
-			Path destination = new File(mStartDir.toString() + '\\' + mFile.getName()).toPath();
+			Path destination = new File(mStartDir.toString() + '/' + mFile.getName()).toPath();
 			if (!mFile.exists() || destination.toFile().exists()) return;
 			boolean moved = false;
 			int tried = 1;
@@ -468,7 +469,7 @@ public class Ingest {
 			if (mType == ContentType.VIDEO) {//ThumbnailHandler.createVideoThumbnail(mFile, new File(FileSystemHandler.INGEST_PROCESS_DIR.toString() + '\\' + mHash + SUFFIX_THUMBNAIL + ".jpg"));
 			}
 			else if (mType == ContentType.IMAGE) {
-				File thumbnail = new File(FileSystemHandler.INGEST_PROCESS_DIR.toString() + '\\' + mHash + SUFFIX_THUMBNAIL + '.' + mExtension);
+				File thumbnail = new File(FileSystemHandler.INGEST_PROCESS_DIR.toString() + '/' + mHash + SUFFIX_THUMBNAIL + '.' + mExtension);
 				ThumbnailHandler.createImageThumbnail(mFile, thumbnail);
 				if (handleImageSimilarity(thumbnail)) {
 					trash(mResult);
@@ -541,7 +542,7 @@ public class Ingest {
 			try {
 				switch (ingestResult) {
 					case HASH_DUPLICATE, SIMILARITY_DUPLICATE_100 -> Files.delete(mFile.toPath());
-					case SIMILARITY_DUPLICATE_500 -> Files.move(mFile.toPath(), new File(FileSystemHandler.TRASH_DIR.toString() + '\\' + PREFIX_DUPLICATE_SIMILARITY_500 + mHash + '.' + mExtension).toPath());
+					case SIMILARITY_DUPLICATE_500 -> Files.move(mFile.toPath(), new File(FileSystemHandler.TRASH_DIR.toString() + '/' + PREFIX_DUPLICATE_SIMILARITY_500 + mHash + '.' + mExtension).toPath());
 					case INGEST -> throw new InvalidParameterException("Trash is for failures, Ingest is a success tag");
 				}
 			}

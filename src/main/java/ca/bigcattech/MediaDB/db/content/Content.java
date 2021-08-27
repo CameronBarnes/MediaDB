@@ -1,7 +1,7 @@
 /*
  *     Content
- *     Last Modified: 2021-08-14, 5:56 p.m.
- *     Copyright (C) 2021-08-14, 5:57 p.m.  CameronBarnes
+ *     Last Modified: 2021-08-27, 4:23 p.m.
+ *     Copyright (C) 2021-08-27, 4:23 p.m.  CameronBarnes
  *
  *     This program is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
@@ -256,31 +256,25 @@ public class Content {
 		mTimeSpent += timeSpent;
 	}
 	
-	public FormattingError isValid() {
+	public void validate() throws ContentValidationException {
 		
 		removeInvalidTags();
 		
-		if (mHash == null || mHash.isEmpty() || mHash.equals("null")) return FormattingError.NULL_HASH;
-		if (mFile == null) return FormattingError.NULL_PATH;
-		if (!mFile.exists()) return FormattingError.FILE_NOT_EXIST;
-		if (!mFile.isFile()) return FormattingError.PATH_NOT_FILE;
-		if (FileSystemHandler.getContentTypeOfFile(mFile) != mType) return FormattingError.CONTENT_TYPE_MISMATCH;
-		
-		return FormattingError.VALID;
-		
-	}
-	
-	public void validate() throws ContentValidationException {
-		
-		FormattingError formattingError = this.isValid();
-		if (formattingError != FormattingError.VALID) throw new ContentValidationException(formattingError);
+		if (mHash == null || mHash.isEmpty() || mHash.equals("null"))
+			throw new ContentValidationException(FormattingError.NULL_HASH);
+		if (mFile == null) throw new ContentValidationException(FormattingError.NULL_PATH);
+		if (!mFile.exists()) throw new ContentValidationException(FormattingError.FILE_NOT_EXIST, mFile.toString());
+		if (!mFile.isFile()) throw new ContentValidationException(FormattingError.PATH_NOT_FILE, mFile.toString());
+		if (FileSystemHandler.getContentTypeOfFile(mFile) != mType)
+			throw new ContentValidationException(FormattingError.CONTENT_TYPE_MISMATCH, "Expected " + FileSystemHandler.getContentTypeOfFile(mFile) + " and got " + mType.name());
 		
 	}
 	
 	public String getThumbnailFile() {
 		
 		if (mType == ContentType.GIF) return mFile.getPath();
-		if (mType == ContentType.IMAGE) return FileSystemHandler.CONTENT_THUMBNAIL_DIR.toString() + '\\' + mHash + Ingest.SUFFIX_THUMBNAIL + '.' + FileSystemHandler.getExtension(mFile);
+		if (mType == ContentType.IMAGE)
+			return FileSystemHandler.CONTENT_THUMBNAIL_DIR.toString() + '/' + mHash + Ingest.SUFFIX_THUMBNAIL + '.' + FileSystemHandler.getExtension(mFile);
 		
 		return "";
 		
@@ -359,6 +353,11 @@ public class Content {
 		public ContentValidationException(FormattingError error) {
 			
 			super(error.name());
+		}
+		
+		public ContentValidationException(FormattingError error, String str) {
+			
+			super(error.name() + ": " + str);
 		}
 		
 	}

@@ -1,7 +1,7 @@
 /*
  *     MainFrame
- *     Last Modified: 2021-07-18, 8:53 p.m.
- *     Copyright (C) 2021-08-02, 6:46 a.m.  CameronBarnes
+ *     Last Modified: 2021-08-27, 4:23 p.m.
+ *     Copyright (C) 2021-08-27, 4:23 p.m.  CameronBarnes
  *
  *     This program is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
@@ -140,6 +140,7 @@ public class MainFrame extends JFrame {
 		startSlideshow.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent e) {
+				
 				super.mouseClicked(e);
 				mSession.startSlideShow();
 			}
@@ -148,9 +149,15 @@ public class MainFrame extends JFrame {
 		contentView.add(slideshowTimerSpinner);
 		contentView.add(startSlideshow);
 		
+		JMenu migrate = new JMenu("Migrate");
+		JButton migrateFileSeparators = new JButton("File Separators");
+		migrateFileSeparators.addActionListener(e -> mSession.getDBHandler().manualMigrate());
+		migrate.add(migrateFileSeparators);
+		
 		jMenu.add(searchOptions);
 		jMenu.add(ingestOptions);
 		jMenu.add(contentView);
+		jMenu.add(migrate);
 		jMenu.add(new JLabel("Result Columns"));
 		jMenu.add(mColumnSpinner);
 		
