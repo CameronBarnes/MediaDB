@@ -1,7 +1,7 @@
 /*
  *     Tag
- *     Last Modified: 2021-08-02, 10:34 a.m.
- *     Copyright (C) 2021-08-14, 5:57 p.m.  CameronBarnes
+ *     Last Modified: 2023-09-16, 3:13 p.m.
+ *     Copyright (C) 2023-09-16, 3:13 p.m.  CameronBarnes
  *
  *     This program is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
@@ -21,7 +21,6 @@ package ca.bigcattech.MediaDB.db.tag;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 
 public class Tag {
 	
@@ -32,21 +31,26 @@ public class Tag {
 	private int mUses = 0;
 	
 	public Tag(String name) {
-		mName = name;
+
+        mName = name;
 		mParentTags = new String[]{};
-	}
+
+    }
 	
 	public Tag(String name, String[] parentTags) {
-		mName = name;
+
+        mName = name;
 		mParentTags = parentTags;
-	}
+
+    }
 	
 	public Tag(String name, String[] parentTags, boolean restricted) {
 		
 		mName = name;
 		mParentTags = parentTags;
 		mRestricted = restricted;
-	}
+
+    }
 	
 	public Tag(String name, TagType type, String[] parentTags, boolean restricted) {
 		
@@ -54,7 +58,8 @@ public class Tag {
 		mTagType = type;
 		mParentTags = parentTags;
 		mRestricted = restricted;
-	}
+
+    }
 	
 	public Tag(String name, TagType type, String[] parentTags, boolean restricted, int uses) {
 		
@@ -63,21 +68,21 @@ public class Tag {
 		mParentTags = parentTags;
 		mRestricted = restricted;
 		mUses = uses;
-	}
+
+    }
 	
 	public Tag(String name, boolean restricted) {
 		
 		mName = name;
 		mRestricted = restricted;
-	}
+
+    }
 	
 	public void setUses(int numUses) {
-		
 		mUses = numUses;
 	}
 	
 	public int getNumUses() {
-		
 		return mUses;
 	}
 	
@@ -117,8 +122,8 @@ public class Tag {
 	}
 	
 	public void addParentTags(String[] tags) {
-		
-		List<String> list = new ArrayList<>(Arrays.asList(mParentTags));
+
+        ArrayList<String> list = new ArrayList<>(Arrays.asList(mParentTags));
 		for (String tag : tags) {
 			
 			if (list.contains(tag)) continue;
@@ -135,8 +140,8 @@ public class Tag {
 	}
 	
 	public void removeParentTags(String[] tags) {
-		
-		List<String> list = new ArrayList<>(Arrays.asList(mParentTags));
+
+        ArrayList<String> list = new ArrayList<>(Arrays.asList(mParentTags));
 		
 		for (String tag : tags) {
 			list.remove(tag);

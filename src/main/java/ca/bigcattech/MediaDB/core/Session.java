@@ -1,7 +1,7 @@
 /*
  *     Session
- *     Last Modified: 2021-08-02, 6:46 a.m.
- *     Copyright (C) 2021-08-02, 6:46 a.m.  CameronBarnes
+ *     Last Modified: 2023-09-16, 3:13 p.m.
+ *     Copyright (C) 2023-09-16, 3:13 p.m.  CameronBarnes
  *
  *     This program is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
@@ -290,13 +290,11 @@ public class Session {
 	}
 	
 	private boolean checkContentWithBlacklist(Content content) {
-		
-		return !Utils.stringArrContainsStrFromArray(content.getTags(), mSearchTagsBlacklist);
+		return Utils.stringArrNotContainsStrFromArray(content.getTags(), mSearchTagsBlacklist);
 	}
 	
 	private boolean checkPoolWithBlackList(Pool pool) {
-		
-		return !Utils.stringArrContainsStrFromArray(pool.getAllTags(), mSearchTagsBlacklist);
+		return Utils.stringArrNotContainsStrFromArray(pool.getAllTags(), mSearchTagsBlacklist);
 	}
 	
 	public void home() {
@@ -347,8 +345,8 @@ public class Session {
 	}
 	
 	public void content() {
-		
-		log.info("Display Content");
+
+		//log.info("Display Content"); We dont need this right now, leave for debugging but it's just spam most of the time.
 		
 		mKeyListener = null;
 		
@@ -661,6 +659,11 @@ public class Session {
 	public DBHandler getDBHandler() {
 		
 		return mDBHandler;
+	}
+
+	public void exit() {
+		if (mKeyListener != null)
+			mKeyListener.exit();
 	}
 	
 	public enum SessionState {

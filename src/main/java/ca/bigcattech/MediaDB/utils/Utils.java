@@ -1,7 +1,7 @@
 /*
  *     Utils
- *     Last Modified: 2021-06-25, 9:56 a.m.
- *     Copyright (C) 2021-07-03, 2:22 a.m.  CameronBarnes
+ *     Last Modified: 2023-09-16, 3:13 p.m.
+ *     Copyright (C) 2023-09-16, 3:13 p.m.  CameronBarnes
  *
  *     This program is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
@@ -25,7 +25,6 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.security.MessageDigest;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -34,20 +33,21 @@ public final class Utils {
 	private Utils() {
 	
 	}
-	
-	public static boolean stringArrContainsStrFromArray(String[] main, String[] blacklist) {
-		
-		List<String> mainList = Arrays.asList(main);
-		
-		for (String bad : blacklist) {
-			if (mainList.contains(bad)) return true;
-		}
-		
-		return false;
+
+    public static boolean stringArrNotContainsStrFromArray(String[] main, String[] blacklist) {
+
+        for (String m : main) {
+            for (String b : blacklist) {
+                if (m.equals(b))
+                    return false;
+            }
+        }
+
+        return true;
 		
 	}
-	
-	public static String convertArrayToGramaticallyAcceptableList(Object[] arr, boolean andOr, boolean period) {
+
+    public static String convertArrayToGrammaticallyAcceptableList(Object[] arr, boolean andOr, boolean period) {
 		
 		if (arr.length == 0) return period ? "." : "";
 		else if (arr.length == 1) return arr[0].toString() + (period ? "." : "");

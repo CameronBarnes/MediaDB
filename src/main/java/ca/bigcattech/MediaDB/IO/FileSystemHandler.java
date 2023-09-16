@@ -1,7 +1,7 @@
 /*
  *     FileSystemHandler
- *     Last Modified: 2021-08-19, 9:34 p.m.
- *     Copyright (C) 2021-08-27, 4:23 p.m.  CameronBarnes
+ *     Last Modified: 2022-05-01, 11:09 p.m.
+ *     Copyright (C) 2023-09-16, 3:13 p.m.  CameronBarnes
  *
  *     This program is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
@@ -280,16 +280,20 @@ public class FileSystemHandler {
 	
 	public static ContentType getContentTypeOfFile(File file) {
 		
-		ContentType type;
-		
 		switch (Utils.getLastSubstring(file.toString(), ".").toLowerCase()) {
-			case "jpg", "jpeg", "png", "jfif" -> type = ContentType.IMAGE;
-			case "mp4", "mov", "webm", "flv" -> type = ContentType.VIDEO;
-			case "gif" -> type = ContentType.GIF;
-			default -> type = ContentType.CONTENT;
+			case "jpg", "jpeg", "png", "jfif", "jpg_large", "jpe" -> {
+				return ContentType.IMAGE;
+			}
+			case "mp4", "mov", "webm", "flv" -> {
+				return ContentType.VIDEO;
+			}
+			case "gif" -> {
+				return ContentType.GIF;
+			}
+			default -> {
+				return ContentType.CONTENT;
+			}
 		}
-		
-		return type;
 		
 	}
 	

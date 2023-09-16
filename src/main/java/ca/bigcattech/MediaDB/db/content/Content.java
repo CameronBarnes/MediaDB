@@ -1,7 +1,7 @@
 /*
  *     Content
- *     Last Modified: 2021-08-27, 4:23 p.m.
- *     Copyright (C) 2021-08-27, 4:23 p.m.  CameronBarnes
+ *     Last Modified: 2022-12-03, 7:57 p.m.
+ *     Copyright (C) 2023-09-16, 3:13 p.m.  CameronBarnes
  *
  *     This program is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
@@ -273,6 +273,8 @@ public class Content {
 	public String getThumbnailFile() {
 		
 		if (mType == ContentType.GIF) return mFile.getPath();
+		if (mType == ContentType.VIDEO)
+			return FileSystemHandler.CONTENT_THUMBNAIL_DIR.toString() + '/' + mHash + Ingest.SUFFIX_THUMBNAIL + ".gif";
 		if (mType == ContentType.IMAGE)
 			return FileSystemHandler.CONTENT_THUMBNAIL_DIR.toString() + '/' + mHash + Ingest.SUFFIX_THUMBNAIL + '.' + FileSystemHandler.getExtension(mFile);
 		

@@ -1,7 +1,7 @@
 /*
  *     AutoCompleteTextField
- *     Last Modified: 2021-08-02, 6:46 a.m.
- *     Copyright (C) 2021-08-02, 6:46 a.m.  CameronBarnes
+ *     Last Modified: 2023-09-16, 3:13 p.m.
+ *     Copyright (C) 2023-09-16, 3:13 p.m.  CameronBarnes
  *
  *     This program is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
@@ -40,6 +40,7 @@ public class AutoCompleteTextField extends JTextField implements KeyListener, Do
 	private Color mIncompleteColour;
 	private boolean mAreGuessing;
 	private boolean mCaseSensitive;
+	private boolean mNoNumbers;
 	private boolean mCheckSeparatedWords;
 	
 	private DBHandler mDBHandler;
@@ -52,14 +53,15 @@ public class AutoCompleteTextField extends JTextField implements KeyListener, Do
 		mAreGuessing = false;
 		mCaseSensitive = false;
 		mCheckSeparatedWords = true;
+		mNoNumbers = true;
 		
 		this.addKeyListener(this);
 		this.getDocument().addDocumentListener(this);
 		this.setFocusTraversalKeysEnabled(false);
 		
 	}
-	
-	public AutoCompleteTextField(boolean caseSensitive, boolean checkSeparatedWords) {
+
+	public AutoCompleteTextField(boolean caseSensitive, boolean checkSeparatedWords, boolean noNumbers) {
 		
 		mDictionary = new ArrayList<>();
 		mCurrentGuess = -1;
@@ -67,6 +69,7 @@ public class AutoCompleteTextField extends JTextField implements KeyListener, Do
 		mAreGuessing = false;
 		mCaseSensitive = caseSensitive;
 		mCheckSeparatedWords = checkSeparatedWords;
+		mNoNumbers = noNumbers;
 		
 		this.addKeyListener(this);
 		this.getDocument().addDocumentListener(this);
@@ -213,6 +216,14 @@ public class AutoCompleteTextField extends JTextField implements KeyListener, Do
 		
 		mCheckSeparatedWords = separateWords;
 	}
+
+	public void setNoNumbers(boolean noNumbers) {
+		mNoNumbers = noNumbers;
+	}
+
+	public boolean isNoNumbers() {
+		return mNoNumbers;
+	}
 	
 	public String getCurrentGuess() {
 		
@@ -228,22 +239,6 @@ public class AutoCompleteTextField extends JTextField implements KeyListener, Do
 		int index = raw.lastIndexOf(' ');
 		if (index == -1) return getCurrentGuess();
 		return raw.substring(0, index + 1) + getCurrentGuess();
-		
-	}
-	
-	@Override
-	public void keyPressed(KeyEvent e) {
-		
-		if (e.getKeyCode() == KeyEvent.VK_TAB) {
-			
-			if (mAreGuessing) {
-				this.setText(getReplacementText());
-				mAreGuessing = true;
-				alternateGuess();
-			}
-			e.consume();
-			
-		}
 		
 	}
 	
@@ -282,22 +277,55 @@ public class AutoCompleteTextField extends JTextField implements KeyListener, Do
 		if (mAreGuessing) alternateGuess();
 		
 	}
+
+	@Override
+	public void changedUpdate(DocumentEvent e) {
+
+	}
+
+	@Override
+	public void keyPressed(KeyEvent e) {
+
+		if (e.getKeyCode() == KeyEvent.VK_TAB) {
+
+			if (mAreGuessing) {
+				this.setText(getReplacementText());
+				mAreGuessing = true;
+				alternateGuess();
+			}
+			e.consume();
+
+		}
+
+		if (mNoNumbers && Character.isDigit(e.getKeyChar())) {
+
+			e.consume();
+
+		}
+
+	}
 	
 	@Override
 	public void keyTyped(KeyEvent e) {
 		
 		if (e.getKeyCode() == KeyEvent.VK_TAB) e.consume();
+		if (mNoNumbers && Character.isDigit(e.getKeyChar())) {
+
+			e.consume();
+
+		}
+		
 	}
 	
 	@Override
 	public void keyReleased(KeyEvent e) {
 		
 		if (e.getKeyCode() == KeyEvent.VK_TAB) e.consume();
-	}
-	
-	@Override
-	public void changedUpdate(DocumentEvent e) {
-	
+		if (mNoNumbers && Character.isDigit(e.getKeyChar())) {
+
+			e.consume();
+
+		}
 	}
 	
 	@Override
@@ -306,6 +334,7 @@ public class AutoCompleteTextField extends JTextField implements KeyListener, Do
 		super.setText(text);
 		mCurrentGuess = -1;
 		this.mAreGuessing = false;
+
 	}
 	
 }

@@ -1,7 +1,7 @@
 /*
  *     MongoDBHandler
- *     Last Modified: 2021-08-19, 10:03 p.m.
- *     Copyright (C) 2021-08-27, 4:23 p.m.  CameronBarnes
+ *     Last Modified: 2023-09-16, 3:13 p.m.
+ *     Copyright (C) 2023-09-16, 3:13 p.m.  CameronBarnes
  *
  *     This program is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
@@ -96,7 +96,7 @@ public class MongoDBHandler implements DBHandler {
 		
 		MongoClient mongoClient = MongoClients.create(
 				MongoClientSettings.builder()
-								   .applyToClusterSettings(builder -> builder.hosts(Arrays.asList(new ServerAddress(address))))
+								   .applyToClusterSettings(builder -> builder.hosts(List.of(new ServerAddress(address))))
 								   .build());
 		
 		mDatabase = mongoClient.getDatabase(database);
@@ -317,8 +317,8 @@ public class MongoDBHandler implements DBHandler {
 		long start = System.currentTimeMillis();
 		
 		migrateSignatures();
-		
-		log.info("Migrating took " + (System.currentTimeMillis() - start) + "ms");
+
+        log.info("Migrating took {}ms", System.currentTimeMillis() - start);
 		
 	}
 	
@@ -493,10 +493,10 @@ public class MongoDBHandler implements DBHandler {
 	}
 	
 	@Override
-	public Pool[] getPoolFromUID(int[] uids) {
+    public Pool[] getPoolFromUID(int[] UIDs) {
 		
 		ArrayList<Pool> out = new ArrayList<>();
-		for (int uid : uids) {
+        for (int uid : UIDs) {
 			Pool pool = getPoolFromUID(uid);
 			if (pool != null) out.add(pool);
 		}
@@ -630,7 +630,7 @@ public class MongoDBHandler implements DBHandler {
 		long start = System.currentTimeMillis();
 		ConcurrentLinkedQueue<Pool> pools = new ConcurrentLinkedQueue<>();
 		documents.stream().parallel().filter(Objects::nonNull).filter(filterPoolRestricted(restricted)).forEach(document -> pools.add(loadPoolFromDocument(document)));
-		log.info("Loading pools from documents took: " + (System.currentTimeMillis() - start) + "ms");
+        log.info("Loading pools from documents took: {}ms", System.currentTimeMillis() - start);
 		
 		return pools.toArray(new Pool[]{});
 		
@@ -647,7 +647,7 @@ public class MongoDBHandler implements DBHandler {
 		long start = System.currentTimeMillis();
 		ConcurrentLinkedQueue<Content> content = new ConcurrentLinkedQueue<>();
 		documents.stream().parallel().filter(filterContentRestricted(searchOptions.isRestricted())).forEach(document -> content.add(loadContentFromDocument(document)));
-		log.info("Loading content from documents took: " + (System.currentTimeMillis() - start) + "ms");
+        log.info("Loading content from documents took:  {}ms", System.currentTimeMillis() - start);
 		
 		return content.toArray(new Content[]{});
 		
@@ -774,23 +774,6 @@ public class MongoDBHandler implements DBHandler {
 		
 	}
 	
-	//Removing this as it doesnt actually get used. I'll leave it here just in case I want it later and wonder why it's not still there
-	/*public void updateAllContentWithTag(Tag[] tags) {
-		
-		if (tags.length == 0) return;
-		
-		updateAllContentWithTags(Arrays.stream(tags).map(Tag::getName).collect(Collectors.toList()).toArray(new String[]{}));
-		
-	}
-	
-	public void updateAllPoolsWithTag(Tag[] tags) {
-		
-		if (tags.length == 0) return;
-		
-		updateAllPoolsWithTags(Arrays.stream(tags).map(Tag::getName).collect(Collectors.toList()).toArray(new String[]{}));
-		
-	}*/
-	
 	@Override
 	public void updateAllPoolsWithTags(String[] tags) {
 		
@@ -818,7 +801,8 @@ public class MongoDBHandler implements DBHandler {
 		
 		documents.stream().parallel().forEach(document -> {
 			Content content = loadContentFromDocument(document);
-			if (content == null) return;
+            if (content == null)
+                return;
 			content.update(this);
 			try {
 				exportContent(content);
@@ -991,6 +975,10 @@ public class MongoDBHandler implements DBHandler {
 		for (String tagName : tags) {
 			
 			Tag tag = getTagFromName(tagName);
+            if (tag == null) {
+                addTag(tagName);
+                tag = getTagFromName(tagName);
+            }
 			tag.incrementUses();
 			exportTag(tag, false);
 			
@@ -1035,9 +1023,7 @@ public class MongoDBHandler implements DBHandler {
 	
 	@Override
 	public void updateAllTags() {
-		
 		getAllTags().stream().parallel().forEach(tag -> exportTag(tag, true));
-		
 	}
 	
 	@Override

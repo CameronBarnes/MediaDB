@@ -8,50 +8,35 @@ version '1.0.0'
 repositories {
 	mavenCentral()
 	maven { url 'https://jitpack.io' }
-	flatDir dirs: 'C:/Program Files/JetBrains/IntelliJ IDEA Community Edition 2020.2.1/lib'
+	flatDir dirs: 'C:\\Program Files\\JetBrains\\IntelliJ IDEA Community Edition 2023.1\\lib'
 }
 
 dependencies {
 
-	testImplementation 'org.junit.jupiter:junit-jupiter-api:5.6.0'
-	testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine'
+	testImplementation 'org.junit.jupiter:junit-jupiter-api:5.9.0'
+	testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.9.0'
 
 	//Database
 	// https://mvnrepository.com/artifact/org.mongodb/mongo-java-driver
-	implementation group: 'org.mongodb', name: 'mongo-java-driver', version: '3.12.8'
+	implementation group: 'org.mongodb', name: 'mongo-java-driver', version: '3.12.11'
 
 	//Logging
 	// https://mvnrepository.com/artifact/org.apache.logging.log4j/log4j-core
-	implementation group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.14.1'
+	implementation group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.20.0'
+	// https://mvnrepository.com/artifact/org.apache.logging.log4j/log4j-slf4j2-impl
+	implementation group: 'org.apache.logging.log4j', name: 'log4j-slf4j2-impl', version: '2.20.0'
 	// https://mvnrepository.com/artifact/org.apache.logging.log4j/log4j-api
-	implementation group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.14.1'
-	// https://mvnrepository.com/artifact/org.apache.logging.log4j/log4j-slf4j-impl
-	implementation group: 'org.apache.logging.log4j', name: 'log4j-slf4j-impl', version: '2.14.1'
-	// https://mvnrepository.com/artifact/org.slf4j/slf4j-api
-	implementation group: 'org.slf4j', name: 'slf4j-api', version: '2.0.0-alpha1'
-	// https://mvnrepository.com/artifact/org.slf4j/slf4j-jdk14
-	implementation group: 'org.slf4j', name: 'slf4j-simple', version: '2.0.0-alpha1'
+	implementation group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.20.0'
+
 
 	//Video, audio, and image player. It's VLC
 	// https://mvnrepository.com/artifact/uk.co.caprica/vlcj
-	implementation group: 'uk.co.caprica', name: 'vlcj', version: '4.5.0'
+	implementation group: 'uk.co.caprica', name: 'vlcj', version: '4.7.3'
 
-	//Thumbnails
-	//compile 'com.github.makbn:JThumbnail:master-SNAPSHOT' cant figure out how to get it working, documentation is shit
-	// https://mvnrepository.com/artifact/org.bytedeco/javacv-platform
-	//implementation group: 'org.bytedeco', name: 'javacv-platform', version: '1.5.5' //Was using this for video thumbnails. Cant seem to get it to work either
-
-	//Used for image resizing for image comparison
-	// https://mvnrepository.com/artifact/org.imgscalr/imgscalr-lib //The fast option
-	implementation group: 'org.imgscalr', name: 'imgscalr-lib', version: '4.2'
-	// https://mvnrepository.com/artifact/net.coobird/thumbnailator //The quality option
-	implementation group: 'net.coobird', name: 'thumbnailator', version: '0.4.13'
-
-	// https://mvnrepository.com/artifact/javax.media/jai_imageio
-	//implementation group: 'javax.media', name: 'jai_imageio', version: '1.1.1'
+	implementation group: 'net.coobird', name: 'thumbnailator', version: '0.4.17'
 
 	//Stuff to hopefully make forms work
-	compile name: 'forms_rt', version: '13.1.1'
+	implementation name: 'forms_rt', version: '13.1.1'
 
 }
 

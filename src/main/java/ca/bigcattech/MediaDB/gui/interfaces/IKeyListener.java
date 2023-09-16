@@ -1,7 +1,7 @@
 /*
  *     IKeyListener
- *     Last Modified: 2021-06-18, 7:28 p.m.
- *     Copyright (C) 2021-06-18, 7:28 p.m.  CameronBarnes
+ *     Last Modified: 2023-09-16, 3:13 p.m.
+ *     Copyright (C) 2023-09-16, 3:13 p.m.  CameronBarnes
  *
  *     This program is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
@@ -28,5 +28,7 @@ public interface IKeyListener {
 	void keyPressed(KeyEvent e, boolean control);
 	
 	void keyReleased(KeyEvent e, boolean control);
+
+	void exit();
 	
 }

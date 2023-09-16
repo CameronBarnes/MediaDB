@@ -1,7 +1,7 @@
 /*
  *     SimilarityFinder
- *     Last Modified: 2021-08-14, 5:56 p.m.
- *     Copyright (C) 2021-08-14, 5:57 p.m.  CameronBarnes
+ *     Last Modified: 2023-09-16, 3:13 p.m.
+ *     Copyright (C) 2023-09-16, 3:13 p.m.  CameronBarnes
  *
  *     This program is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
@@ -76,7 +76,7 @@ public class SimilarityFinder {
 				signature[x][y] = averageAround(image, prop[x], prop[y]);
 			}
 		}
-		return new ImageSignature(signature);
+		return new ImageSignature(signature); //TODO check for a minimum value to make sure we're not saving empty signatures
 		
 	}
 	
@@ -119,6 +119,20 @@ public class SimilarityFinder {
 	
 	public List<Map.Entry<String, Double>> checkSimilarity(File thumbnail) throws IOException {
 		return checkSimilarity(ImageUtils.calcImageSignature(thumbnail));
+	}
+
+	//We're adding this one to reduce the number of times we're getting all the signatures
+	public List<Map.Entry<String, Double>> checkSimilarity(ImageSignature signature, List<ImageSignature> signatures) {
+
+		ConcurrentHashMap<String, Double> results = new ConcurrentHashMap<>();
+
+		signatures.stream().parallel().filter(Objects::nonNull).forEach(sig -> {
+			double result = calcDistance(signature, sig);
+			if (result <= 1000) results.put(sig.getHash(), result);
+		});
+
+		return Utils.sortByValue(results);
+
 	}
 	
 	public List<Map.Entry<String, Double>> checkSimilarity(ImageSignature signature) {

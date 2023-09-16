@@ -1,7 +1,7 @@
 /*
  *     Ingest
- *     Last Modified: 2021-08-27, 4:23 p.m.
- *     Copyright (C) 2021-08-27, 4:23 p.m.  CameronBarnes
+ *     Last Modified: 2023-09-16, 3:13 p.m.
+ *     Copyright (C) 2023-09-16, 3:13 p.m.  CameronBarnes
  *
  *     This program is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
@@ -35,6 +35,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
+import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.security.InvalidParameterException;
 import java.security.MessageDigest;
@@ -59,7 +60,6 @@ public class Ingest {
 	//=======================================Final Static variables============================
 	
 	public static final String SUFFIX_THUMBNAIL = "_THUMBNAIL";
-	//public static final String PREFIX_DUPLICATE_HASH = "DUPLICATE_HASH_";
 	//public static final String PREFIX_DUPLICATE_SIMILARITY_100 = "DUPLICATE_SIMILARITY_100_";
 	public static final String PREFIX_DUPLICATE_SIMILARITY_500 = "DUPLICATE_SIMILARITY_500_";
 	
@@ -74,6 +74,8 @@ public class Ingest {
 	private final ConcurrentLinkedQueue<String> mHashes = new ConcurrentLinkedQueue<>();
 	private Session mSession;
 	private boolean mRun = false;
+
+	private ArrayList<ImageSignature> mSignatures;
 	
 	public Ingest(DBHandler dbHandler) {
 		
@@ -133,10 +135,11 @@ public class Ingest {
 	}
 	
 	public void stop() {
-		
+
+		if (mSignatures != null && !mSignatures.isEmpty())
+			mSignatures.clear();
 		log.info("Stopping ingest handler");
 		mRun = false;
-		//mIngestThread.interrupt();
 		try {
 			mIngestThread.join();
 		}
@@ -178,8 +181,13 @@ public class Ingest {
 		if (!folder.isDirectory()) return;
 		
 		mHashes.clear();
-		
-		Arrays.stream(Objects.requireNonNull(folder.listFiles())).parallel().forEach(file -> {
+
+		File[] files = Objects.requireNonNull(folder.listFiles());
+
+		System.out.println("Start Purge duplicates from " + files.length + " files");
+		long start = System.currentTimeMillis();
+
+		Arrays.stream(Objects.requireNonNull(files)).parallel().forEach(file -> {
 			if (file.isDirectory()) return;
 			try {
 				String hash = Utils.getFileChecksum(MessageDigest.getInstance("SHA-256"), file);
@@ -190,7 +198,9 @@ public class Ingest {
 				e.printStackTrace();
 			}
 		});
-		
+
+		System.out.println("Removed " + (files.length - mHashes.size()) + " duplicates from " + files.length + " files");
+		System.out.println("Finished purging duplicates in " + (System.currentTimeMillis() - start) + "ms");
 		
 	}
 	
@@ -209,17 +219,32 @@ public class Ingest {
 		log.debug("Ingest Content");
 		
 		mHashes.clear();
+
+		mSignatures = new ArrayList<>(mDBHandler.getAllSignatures());
 		
 		start();
 		
 		File[] files = directory.listFiles();
 		if (files == null || files.length == 0) return;
 		//We're going to parallelize this because it gets VERY slow when the number of files gets up there
-		Arrays.stream(files).parallel().forEach(file -> {
+
+		// TODO find a more permanent solution for this
+		boolean videosFirst = false;
+
+		Arrays.stream(files).parallel().sorted(Comparator.comparing(file -> {
+			if (videosFirst) {
+				return FileSystemHandler.getContentTypeOfFile(file) != ContentType.VIDEO;
+			} else {
+				return true;
+			}
+		})).forEachOrdered(file -> {
 			if (file.isDirectory()) return;
 			boolean newFile = true;
 			for (IngestTask task : mIngestTasks) {
-				if (task.mFile.getName().equals(file.getName())) newFile = false;
+                if (task.mFile.getName().equals(file.getName())) {
+                    newFile = false;
+                    break;
+                }
 			}
 			if (newFile) {
 				
@@ -271,6 +296,22 @@ public class Ingest {
 			mFile = file;
 			mStartDir = mFile.getParentFile();
 			if (!mStartDir.isDirectory()) throw new RuntimeException("Invalid File: " + file.getName());
+
+		}
+
+		public ContentType processContentType() {
+
+			//Get the file's type based on extension
+			mType = FileSystemHandler.getContentTypeOfFile(mFile);
+			//Get the file's extension
+			if (mFile.getPath().contains(".")) {
+				mExtension = FileSystemHandler.getExtension(mFile);
+			} else {
+				mExtension = "jpg"; // TODO this isnt great, deal with this issue
+			}
+
+			return mType;
+			
 		}
 		
 		public boolean ingest() throws IOException, Content.ContentValidationException {
@@ -281,11 +322,11 @@ public class Ingest {
 			}
 			
 			mIsActive = true;
+
+			if (mType == null || mExtension == null || mExtension.isEmpty()) {
+				processContentType();
+			}
 			
-			//Get the file's type based on extension
-			mType = FileSystemHandler.getContentTypeOfFile(mFile);
-			//Get the file's extension
-			mExtension = FileSystemHandler.getExtension(mFile);
 			//Calculate the file's hash
 			hash();
 			//Check the database to see if we already have this file by hash
@@ -304,7 +345,13 @@ public class Ingest {
 				mFile = dest;
 			}
 			else {
-				mFile = Files.move(mFile.toPath(), dest.toPath()).toFile();
+				try {
+					mFile = Files.move(mFile.toPath(), dest.toPath()).toFile();
+				} catch (InvalidPathException e) {
+					System.out.println(mFile.toPath());
+					e.printStackTrace();
+					throw e;
+				}
 			}
 			
 			//Process the file
@@ -369,6 +416,7 @@ public class Ingest {
 				Content content = packageContent();
 				//Send the content object to the database
 				export(content);
+				mSignatures.add(mSignature);
 				
 			}
 			
@@ -464,11 +512,8 @@ public class Ingest {
 		}
 		
 		private boolean process() throws IOException {
-			
-			//TODO fix the video thumbnail issue
-			if (mType == ContentType.VIDEO) {//ThumbnailHandler.createVideoThumbnail(mFile, new File(FileSystemHandler.INGEST_PROCESS_DIR.toString() + '\\' + mHash + SUFFIX_THUMBNAIL + ".jpg"));
-			}
-			else if (mType == ContentType.IMAGE) {
+
+			if (mType == ContentType.IMAGE) {
 				File thumbnail = new File(FileSystemHandler.INGEST_PROCESS_DIR.toString() + '/' + mHash + SUFFIX_THUMBNAIL + '.' + mExtension);
 				ThumbnailHandler.createImageThumbnail(mFile, thumbnail);
 				if (handleImageSimilarity(thumbnail)) {
@@ -487,7 +532,7 @@ public class Ingest {
 			mSignature = ImageUtils.calcImageSignature(thumbnail);
 			mSignature.setHash(mHash);
 			long start = System.currentTimeMillis();
-			List<Map.Entry<String, Double>> results = mSimilarityFinder.checkSimilarity(mSignature);
+			List<Map.Entry<String, Double>> results = mSimilarityFinder.checkSimilarity(mSignature, mSignatures);
 			log.info("Similarity check took: " + (System.currentTimeMillis() - start) + "ms to check similarity");
 			
 			if (results.isEmpty()) return false; //No similar images
@@ -499,12 +544,8 @@ public class Ingest {
 				mResult = IngestResult.SIMILARITY_DUPLICATE_500;
 				return true;
 			}
-			
-			//TODO actually do stuff here, we need some kind of user approval process
-			//TODO not sure if we want to shove these in the trash while we're waiting for that or create some kind of temporary storage
-			//Probably the latter ^^^^^^^^^^ but currently the former
-			//TODO referring to the TODO above probably do this back in the process function rather than in here, we're sending out the effective result in the mResult var
-			return false; //TODO not sure if I actually want to do this, but I'm going to say probably
+
+			return false;
 			
 		}
 		

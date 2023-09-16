@@ -1,7 +1,7 @@
 /*
  *     ContentButton
- *     Last Modified: 2021-08-02, 6:46 a.m.
- *     Copyright (C) 2021-08-02, 6:46 a.m.  CameronBarnes
+ *     Last Modified: 2023-09-16, 3:13 p.m.
+ *     Copyright (C) 2023-09-16, 3:13 p.m.  CameronBarnes
  *
  *     This program is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
@@ -23,11 +23,13 @@ import ca.bigcattech.MediaDB.IO.FileSystemHandler;
 import ca.bigcattech.MediaDB.db.content.Content;
 import ca.bigcattech.MediaDB.db.content.ContentType;
 import ca.bigcattech.MediaDB.db.pool.Pool;
+import ca.bigcattech.MediaDB.image.ThumbnailHandler;
 import ca.bigcattech.MediaDB.utils.Utils;
 
 import javax.swing.*;
 import javax.swing.border.BevelBorder;
 import java.awt.*;
+import java.io.File;
 
 public class ContentButton extends JButton {
 	
@@ -121,9 +123,14 @@ public class ContentButton extends JButton {
 	}
 	
 	public void displayThumbnail() {
-		
-		if (mContent != null)
-			this.setIcon(new ImageIcon(mContent.getThumbnailFile()));
+
+		if (mContent != null) {
+			String thumbnailPath = mContent.getThumbnailFile();
+			if (mContent.mType == ContentType.VIDEO && !new File(thumbnailPath).exists()) {
+				ThumbnailHandler.generateVideoThumbnail(mContent.getFile().getAbsolutePath(), mContent.getThumbnailFile());
+			}
+			this.setIcon(new ImageIcon(thumbnailPath));
+		}
 		else
 			this.setIcon(new ImageIcon(mPool.getThumbnailFile()));
 	}

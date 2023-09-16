@@ -1,7 +1,7 @@
 /*
  *     ImageUtils
- *     Last Modified: 2021-08-03, 3:39 p.m.
- *     Copyright (C) 2021-08-14, 5:57 p.m.  CameronBarnes
+ *     Last Modified: 2023-09-16, 3:13 p.m.
+ *     Copyright (C) 2023-09-16, 3:13 p.m.  CameronBarnes
  *
  *     This program is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
@@ -24,12 +24,10 @@ import ca.bigcattech.MediaDB.image.ImageSignature;
 import ca.bigcattech.MediaDB.image.SimilarityFinder;
 import net.coobird.thumbnailator.Thumbnails;
 import net.coobird.thumbnailator.name.Rename;
-import org.imgscalr.Scalr;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.awt.image.ConvolveOp;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -41,31 +39,30 @@ public class ImageUtils {
 	private ImageUtils() {
 	
 	}
-	
-	/**
+
+	/*
 	 * Rough and dirty, but it'll be fast and probably maintain a good image ratio
 	 *
 	 * @param original    original image to be resized
 	 * @param targetWidth the desired width for the output image
 	 * @return the new resized image
 	 */
-	public static BufferedImage scalrSimpleResizeImage(BufferedImage original, int targetWidth) {
-		
+	/*public static BufferedImage scalrSimpleResizeImage(BufferedImage original, int targetWidth) {
 		return Scalr.resize(original, targetWidth);
-	}
-	
-	/**
+	}*/
+
+	/*
 	 * @param original     original image to be resized
 	 * @param targetWidth  the desired width for the output image
 	 * @param targetHeight the desired height for the output image
 	 * @return the new resized image
 	 */
-	public static BufferedImage scalrResizeImage(BufferedImage original, int targetWidth, int targetHeight) {
+	/*public static BufferedImage scalrResizeImage(BufferedImage original, int targetWidth, int targetHeight) {
 		
 		return Scalr.resize(original, Scalr.Method.AUTOMATIC, Scalr.Mode.AUTOMATIC, targetWidth, targetHeight, Scalr.OP_ANTIALIAS);
-	}
-	
-	/**
+	}*/
+
+	/*
 	 * @param original     original image to be resized
 	 * @param targetWidth  the desired width for the output image
 	 * @param targetHeight the desired height for the output image
@@ -73,10 +70,10 @@ public class ImageUtils {
 	 * @param convolveOp   an operation to perform on the image, Scalr.OP_ANTIALIAS is a good example
 	 * @return the new resized image
 	 */
-	public static BufferedImage scalrResizeImage(BufferedImage original, int targetWidth, int targetHeight, Scalr.Method method, ConvolveOp convolveOp) {
+	/*public static BufferedImage scalrResizeImage(BufferedImage original, int targetWidth, int targetHeight, Scalr.Method method, ConvolveOp convolveOp) {
 		
 		return Scalr.resize(original, method, Scalr.Mode.AUTOMATIC, targetWidth, targetHeight, convolveOp);
-	}
+	} */
 	
 	/**
 	 * Defaults to JPEG output, should be a relatively high quality thumbnail
