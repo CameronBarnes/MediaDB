@@ -3,7 +3,7 @@ plugins {
 }
 
 group 'ca.bigcattech'
-version '1.0.0'
+version '2.0.0'
 
 repositories {
 	mavenCentral()
@@ -18,7 +18,7 @@ dependencies {
 
 	//Database
 	// https://mvnrepository.com/artifact/org.mongodb/mongo-java-driver
-	implementation group: 'org.mongodb', name: 'mongo-java-driver', version: '3.12.11'
+	//implementation group: 'org.mongodb', name: 'mongo-java-driver', version: '3.12.11'
 
 	//Logging
 	// https://mvnrepository.com/artifact/org.apache.logging.log4j/log4j-core
@@ -27,6 +27,10 @@ dependencies {
 	implementation group: 'org.apache.logging.log4j', name: 'log4j-slf4j2-impl', version: '2.20.0'
 	// https://mvnrepository.com/artifact/org.apache.logging.log4j/log4j-api
 	implementation group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.20.0'
+
+	//Version
+	// https://mvnrepository.com/artifact/com.vdurmont/semver4j
+	implementation group: 'com.vdurmont', name: 'semver4j', version: '3.1.0'
 
 
 	//Video, audio, and image player. It's VLC

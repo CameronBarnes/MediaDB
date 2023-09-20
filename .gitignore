@@ -36,3 +36,4 @@ test.txt
 /content/
 /ffmpeg.exe
 /Tmp.7z
+!/content/
